@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layered Process Audit Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--nav:#0d233f;--nav2:#12375f;--blue:#2563eb;--bg:#f4f7fb;--card:#fff;--text:#182230;--muted:#64748b;--line:#e6ebf2;--green:#16a34a;--orange:#f59e0b;--red:#dc2626;--purple:#7c3aed}
+    *{box-sizing:border-box} body{margin:0;font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--text)}
+    .app{display:grid;grid-template-columns:255px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,var(--nav),#0a1b30);color:#fff;padding:22px 15px;position:sticky;top:0;height:100vh}.brand{font-weight:700;font-size:20px;line-height:1.15;margin-bottom:28px}.brand small{display:block;font-size:12px;color:#a9c2dd;margin-top:5px}.user{display:flex;gap:12px;align-items:center;padding:14px 10px;border:1px solid rgba(255,255,255,.1);border-radius:12px;margin-bottom:18px}.avatar{width:42px;height:42px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-weight:700}.user .meta{font-size:12px;color:#cbd5e1}.menu{display:flex;flex-direction:column;gap:7px}.menu button{border:0;background:transparent;color:#dbeafe;text-align:left;padding:11px 12px;border-radius:9px;font:inherit;cursor:pointer}.menu button.active,.menu button:hover{background:var(--blue);color:#fff}.menu .section{font-size:11px;color:#7593b3;margin:15px 12px 2px}.content{padding:22px}.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.topbar h1{margin:0;font-size:28px}.topbar p{margin:4px 0 0;color:var(--muted)}.actions{display:flex;gap:10px}.control,.btn{height:40px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 12px;font:inherit}.btn{background:var(--blue);color:#fff;border-color:var(--blue);cursor:pointer}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px}.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:0 6px 16px rgba(15,23,42,.04)}.stat .label{font-size:13px;color:var(--muted)}.stat .value{font-size:28px;font-weight:700;margin-top:7px}.stat small{color:var(--muted)}.stat.blue{border-top:4px solid var(--blue)}.stat.orange{border-top:4px solid var(--orange)}.stat.green{border-top:4px solid var(--green)}.stat.red{border-top:4px solid var(--red)}.stat.purple{border-top:4px solid var(--purple)}
+    .grid3{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:14px;margin-bottom:14px}.grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 6px 16px rgba(15,23,42,.04)}.card h3{font-size:15px;margin:0 0 14px}.chart-wrap{height:270px}.levels{display:flex;flex-direction:column;gap:16px}.level-row{font-size:13px}.level-top{display:flex;justify-content:space-between;margin-bottom:6px}.bar{height:8px;background:#edf2f7;border-radius:999px;overflow:hidden}.bar span{display:block;height:100%;background:var(--blue);border-radius:999px}
+    table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:#475569;background:#f8fafc}.badge{padding:4px 8px;border-radius:999px;font-size:11px;font-weight:600}.pending{background:#fff4d6;color:#9a6700}.progress{background:#dbeafe;color:#1d4ed8}.done{background:#dcfce7;color:#166534}.overdue{background:#fee2e2;color:#b91c1c}.soon{background:#ffedd5;color:#c2410c}.dept-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}.dept{border:1px solid var(--line);padding:12px;border-radius:10px;background:#f8fafc;text-align:center}.dept b{display:block;font-size:18px;margin-top:4px}.hidden{display:none}.empty{padding:40px;text-align:center;color:var(--muted)}
+    @media(max-width:1200px){.stats{grid-template-columns:repeat(2,1fr)}.grid3,.grid2{grid-template-columns:1fr}.dept-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:760px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.content{padding:12px}.topbar{align-items:flex-start;gap:10px;flex-direction:column}.actions{width:100%;flex-wrap:wrap}.stats{grid-template-columns:1fr}.sidebar .menu{display:grid;grid-template-columns:repeat(2,1fr)}.menu .section{grid-column:1/-1}.chart-wrap{height:220px}.table-scroll{overflow:auto}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">LAYERED PROCESS AUDIT<small>MANUFACTURING</small></div>
+    <div class="user"><div class="avatar">WR</div><div><b>Wachirawit</b><div class="meta">Auditor - Level 2</div><div class="meta">● Online</div></div></div>
+    <nav class="menu">
+      <button class="active" data-page="dashboard">⌂ Dashboard</button>
+      <button data-page="assignments">▣ งานที่ได้รับมอบหมาย</button>
+      <button data-page="audit">✓ ทำการ Audit</button>
+      <button data-page="openpoints">! Open Point</button>
+      <button data-page="history">↻ ประวัติการ Audit</button>
+      <button data-page="reports">▥ รายงาน</button>
+      <div class="section">ADMIN</div>
+      <button data-page="manage">⚙ การมอบหมาย Audit</button>
+      <button data-page="checklist">☷ Checklist Master</button>
+      <button data-page="users">♙ ผู้ใช้งาน</button>
+      <button data-page="settings">⚙ ตั้งค่าระบบ</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <section id="dashboard" class="page">
+      <div class="topbar"><div><h1>Dashboard</h1><p>ภาพรวมการตรวจประเมิน Layered Process Audit</p></div><div class="actions"><input class="control" type="month" id="monthFilter"><select class="control" id="unitFilter"><option value="all">ทุกหน่วยงาน</option><option>Stamping</option><option>Welding</option><option>CNC</option><option>Tapping</option><option>Bending</option></select><button class="btn" id="exportBtn">Export CSV</button></div></div>
+      <div class="stats">
+        <div class="stat blue"><div class="label">งานที่ได้รับมอบหมาย</div><div class="value" id="sAssigned">0</div><small>รายการ</small></div>
+        <div class="stat orange"><div class="label">รอดำเนินการ</div><div class="value" id="sPending">0</div><small>รายการ</small></div>
+        <div class="stat green"><div class="label">ดำเนินการเสร็จแล้ว</div><div class="value" id="sDone">0</div><small>รายการ</small></div>
+        <div class="stat red"><div class="label">Open Point ที่เปิดอยู่</div><div class="value" id="sOpen">0</div><small>รายการ</small></div>
+        <div class="stat purple"><div class="label">คะแนนเฉลี่ย</div><div class="value" id="sScore">0%</div><small>Average Score</small></div>
+      </div>
+      <div class="grid3">
+        <div class="card"><h3>แนวโน้มคะแนน Audit</h3><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+        <div class="card"><h3>ผลการตรวจประเมิน</h3><div class="chart-wrap"><canvas id="resultChart"></canvas></div></div>
+        <div class="card"><h3>คะแนนเฉลี่ยตามระดับ Audit</h3><div class="levels" id="levelBars"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>งานที่ได้รับมอบหมายล่าสุด</h3><div class="table-scroll"><table><thead><tr><th>Audit No.</th><th>วันที่</th><th>หน่วยงาน</th><th>Line</th><th>ระดับ</th><th>สถานะ</th></tr></thead><tbody id="assignmentRows"></tbody></table></div></div>
+        <div class="card"><h3>Open Point ใกล้ครบกำหนด</h3><div class="table-scroll"><table><thead><tr><th>OP No.</th><th>ปัญหา</th><th>Due Date</th><th>สถานะ</th></tr></thead><tbody id="openRows"></tbody></table></div><div class="dept-grid" id="deptScores"></div></div>
+      </div>
+    </section>
+
+    <section id="genericPage" class="page hidden"><div class="topbar"><div><h1 id="genericTitle">หน้าเมนู</h1><p>ตัวอย่างหน้าระบบสำหรับต่อยอดเป็นแอพเต็มรูปแบบ</p></div></div><div class="card"><div class="empty">หน้านี้เชื่อมเมนูได้แล้ว และสามารถพัฒนาฟอร์มจริงต่อจากโครงสร้างนี้ได้</div></div></section>
+  </main>
+</div>
+<script>
+const audits=[
+ {no:'AUD-2025-0512',date:'2025-05-12',unit:'Stamping',line:'Line 1',level:'Level 2',status:'pending',score:null},
+ {no:'AUD-2025-0513',date:'2025-05-13',unit:'Welding',line:'Line 2',level:'Level 2',status:'progress',score:null},
+ {no:'AUD-2025-0514',date:'2025-05-14',unit:'CNC',line:'Line 3',level:'Level 2',status:'pending',score:null},
+ {no:'AUD-2025-0515',date:'2025-05-15',unit:'Tapping',line:'Line 4',level:'Level 2',status:'done',score:86.4},
+ {no:'AUD-2025-0516',date:'2025-05-15',unit:'Bending',line:'Line 1',level:'Level 2',status:'done',score:88.7},
+ {no:'AUD-2025-0517',date:'2025-05-17',unit:'Stamping',line:'Line 2',level:'Level 1',status:'done',score:91.2},
+ {no:'AUD-2025-0518',date:'2025-05-19',unit:'Welding',line:'Line 1',level:'Level 3',status:'done',score:84.5},
+ {no:'AUD-2025-0519',date:'2025-05-20',unit:'CNC',line:'Line 2',level:'Level 4',status:'done',score:83.4}
+];
+const openPoints=[
+ {no:'OP-2025-0042',problem:'ไม่มีป้ายบ่งชี้จุดอันตราย',due:'2025-05-10',status:'overdue'},
+ {no:'OP-2025-0043',problem:'อุปกรณ์ป้องกันไม่ครบ',due:'2025-05-16',status:'soon'},
+ {no:'OP-2025-0044',problem:'พื้นที่เปียก ไม่มีป้ายเตือน',due:'2025-05-17',status:'soon'},
+ {no:'OP-2025-0045',problem:'สายไฟวางเกะกะ',due:'2025-05-18',status:'soon'}
+];
+const statusText={pending:'รอดำเนินการ',progress:'กำลังดำเนินการ',done:'เสร็จสิ้น',overdue:'เกินกำหนด',soon:'ใกล้ครบกำหนด'};
+let trendChart,resultChart;
+function filtered(){const unit=document.getElementById('unitFilter').value;return unit==='all'?audits:audits.filter(a=>a.unit===unit)}
+function render(){const data=filtered();document.getElementById('sAssigned').textContent=data.length;document.getElementById('sPending').textContent=data.filter(x=>x.status==='pending').length;document.getElementById('sDone').textContent=data.filter(x=>x.status==='done').length;document.getElementById('sOpen').textContent=openPoints.length;const scored=data.filter(x=>x.score!=null);const avg=scored.length?scored.reduce((s,x)=>s+x.score,0)/scored.length:0;document.getElementById('sScore').textContent=avg.toFixed(2)+'%';
+ document.getElementById('assignmentRows').innerHTML=data.slice(0,6).map(a=>`<tr><td>${a.no}</td><td>${a.date}</td><td>${a.unit}</td><td>${a.line}</td><td>${a.level}</td><td><span class="badge ${a.status}">${statusText[a.status]}</span></td></tr>`).join('');
+ document.getElementById('openRows').innerHTML=openPoints.map(o=>`<tr><td>${o.no}</td><td>${o.problem}</td><td>${o.due}</td><td><span class="badge ${o.status}">${statusText[o.status]}</span></td></tr>`).join('');
+ const levelScores={'Level 1':89.21,'Level 2':87.56,'Level 3':85.12,'Level 4':83.45,'Level 5':81.23};document.getElementById('levelBars').innerHTML=Object.entries(levelScores).map(([k,v])=>`<div class="level-row"><div class="level-top"><span>${k}</span><b>${v}%</b></div><div class="bar"><span style="width:${v}%"></span></div></div>`).join('');
+ const dept={Stamping:88.21,Welding:86.44,CNC:87.91,Tapping:85.67,Bending:84.33};document.getElementById('deptScores').innerHTML=Object.entries(dept).map(([k,v])=>`<div class="dept">${k}<b>${v}%</b></div>`).join('');
+ drawCharts();}
+function drawCharts(){if(trendChart)trendChart.destroy();if(resultChart)resultChart.destroy();trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:['Dec','Jan','Feb','Mar','Apr','May'],datasets:[{label:'Score',data:[78.21,81.45,83.67,86.12,84.33,87.56],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.12)',fill:true,tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});resultChart=new Chart(document.getElementById('resultChart'),{type:'doughnut',data:{labels:['OK','NG','N/A'],datasets:[{data:[158,45,15],backgroundColor:['#22c55e','#ef4444','#cbd5e1']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}})}
+document.getElementById('unitFilter').addEventListener('change',render);document.getElementById('monthFilter').value='2025-05';document.querySelectorAll('.menu button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.menu button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=b.dataset.page;if(p==='dashboard'){document.getElementById('dashboard').classList.remove('hidden');document.getElementById('genericPage').classList.add('hidden')}else{document.getElementById('dashboard').classList.add('hidden');document.getElementById('genericPage').classList.remove('hidden');document.getElementById('genericTitle').textContent=b.textContent.replace(/^[^A-Za-zก-๙]+/,'')}}));
+document.getElementById('exportBtn').addEventListener('click',()=>{const rows=[['Audit No','Date','Unit','Line','Level','Status','Score'],...filtered().map(a=>[a.no,a.date,a.unit,a.line,a.level,statusText[a.status],a.score??''])];const csv='\uFEFF'+rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='LPA_Audit_Report.csv';a.click();URL.revokeObjectURL(url)});
+render();
+</script>
+</body>
+</html>
