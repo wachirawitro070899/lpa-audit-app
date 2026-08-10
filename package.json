@@ -1,0 +1,8 @@
+{
+  "name": "lpa-audit-app",
+  "version": "2.0.0",
+  "private": true,
+  "description": "LPA Audit form with server-side login and role-based route protection",
+  "scripts": {"start": "node server.js"},
+  "engines": {"node": ">=18"}
+}

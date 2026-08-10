@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LPA Audit Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root{--nav:#0d233f;--blue:#2563eb;--bg:#f4f7fb;--card:#fff;--text:#182230;--muted:#64748b;--line:#dfe6ef;--green:#16a34a;--amber:#d97706;--red:#dc2626;--soft:#f8fafc}
+    *{box-sizing:border-box} body{margin:0;font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--text)}
+    .app{min-height:100vh}.topnav{height:68px;background:linear-gradient(90deg,var(--nav),#12375f);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:20;box-shadow:0 3px 12px rgba(15,23,42,.16)}
+    .brand{font-weight:700;font-size:18px}.brand small{display:block;color:#b9cbe0;font-size:11px;font-weight:500}.user-chip{display:flex;align-items:center;gap:10px;font-size:13px}.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#dbeafe;color:#1d4ed8;font-weight:700}.role{color:#cbd5e1;font-size:11px}.logout-btn{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;font-size:12px}.logout-btn:hover{background:rgba(255,255,255,.08)}
+    .page{max-width:1480px;margin:auto;padding:22px}.page-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.page-head h1{margin:0;font-size:26px}.page-head p{margin:4px 0 0;color:var(--muted);font-size:13px}.toolbar{display:flex;flex-wrap:wrap;gap:8px}.btn{border:1px solid var(--line);border-radius:9px;background:#fff;height:40px;padding:0 14px;font:inherit;font-size:13px;cursor:pointer}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.success{background:var(--green);color:#fff;border-color:var(--green)}.btn:hover{filter:brightness(.98)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 5px 16px rgba(15,23,42,.04);margin-bottom:14px}.card-title{font-weight:700;margin-bottom:12px}.filters{display:grid;grid-template-columns:repeat(6,minmax(140px,1fr));gap:12px}.field label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:5px}.field input,.field select{width:100%;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font:inherit;background:#fff}.field input:focus,.field select:focus,.comment:focus,.custom-q:focus{outline:2px solid #bfdbfe;border-color:#60a5fa}
+    .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.metric{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:11px}.metric span{display:block;font-size:11px;color:var(--muted)}.metric b{font-size:20px}.progress-track{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:7px}.progress-track i{display:block;height:100%;background:var(--blue);width:0}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.audit-table{border-collapse:separate;border-spacing:0;width:100%;min-width:1050px;font-size:12px}.audit-table th,.audit-table td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}.audit-table th:last-child,.audit-table td:last-child{border-right:0}.audit-table tr:last-child td{border-bottom:0}.audit-table thead th{position:sticky;top:68px;z-index:10;background:#0f2746;color:#fff;text-align:center;vertical-align:middle}.audit-table th.question{min-width:520px;text-align:left}.audit-table th.comment{min-width:290px}.section-row td{background:#eaf1fb;font-weight:700;color:#12375f;padding:10px}.qtext{line-height:1.55}.subitem{padding-left:24px;color:#475569}.comment{width:100%;min-height:54px;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:7px;font:inherit;font-size:12px}.choice{text-align:center;vertical-align:middle!important;min-width:62px}.choice input{display:none}.choice label{display:inline-grid;place-items:center;min-width:40px;height:34px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-weight:600}.choice input:checked+label{border-color:#2563eb;background:#dbeafe;box-shadow:0 0 0 2px #bfdbfe inset}.choice.na input:checked+label{background:#e2e8f0;border-color:#64748b}.choice.ok input:checked+label{background:#dcfce7;border-color:#22c55e}.choice.observe input:checked+label{background:#fef3c7;border-color:#f59e0b}.choice.ng input:checked+label{background:#fee2e2;border-color:#ef4444}.custom-q{width:100%;border:1px dashed #94a3b8;border-radius:7px;padding:8px;font:inherit;font-size:12px;background:#fff}.hint{font-size:11px;color:var(--muted);margin-top:8px}.saved{font-size:12px;color:var(--green);min-height:18px;margin-top:8px}
+    .print-title{display:none}
+    @media(max-width:1050px){.filters{grid-template-columns:repeat(3,1fr)}.summary{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:700px){.topnav{padding:0 12px}.page{padding:12px}.page-head{flex-direction:column}.filters{grid-template-columns:1fr 1fr}.summary{grid-template-columns:1fr 1fr}.toolbar{width:100%}.btn{flex:1}.brand{font-size:15px}}
+    @media print{
+      @page{size:A4 landscape;margin:8mm}.topnav,.page-head,.no-print,.summary-card{display:none!important}body{background:#fff}.page{padding:0;max-width:none}.card{box-shadow:none;border:0;padding:0;margin:0}.print-title{display:block;text-align:center;margin-bottom:8px}.print-title h2{margin:0;font-size:15px}.print-meta{font-size:9px;margin-top:4px}.table-wrap{overflow:visible;border:1px solid #444;border-radius:0}.audit-table{min-width:0;font-size:7.5px}.audit-table thead th{position:static;background:#eee!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.audit-table th,.audit-table td{padding:3px;border-color:#777}.section-row td{background:#ddd!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.comment{border:0;min-height:18px;padding:0}.custom-q{border:0;padding:0}.choice label{border:0;min-width:20px;height:18px}.choice input:not(:checked)+label{color:#bbb}.choice input:checked+label{font-weight:700;background:transparent!important;box-shadow:none}.hint{display:none}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topnav">
+    <div class="brand">LAYERED PROCESS AUDIT<small>Auditor workspace</small></div>
+    <div class="user-chip"><div class="avatar" id="avatar">AU</div><div><b id="displayName">Auditor</b><div class="role" id="roleText">Audit access only</div></div><button class="logout-btn no-print" id="logoutBtn">ออกจากระบบ</button></div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div><h1>แบบฟอร์ม LPA Audit</h1><p>กรอกผลตรวจตามแบบ LPA จากไฟล์ Excel — ผู้ตรวจเห็นเฉพาะพื้นที่ทำ Audit เท่านั้น</p></div>
+      <div class="toolbar no-print">
+        <button class="btn" id="saveBtn">บันทึกร่าง</button>
+        <button class="btn" id="excelBtn">ดาวน์โหลด Excel</button>
+        <button class="btn" id="pdfBtn">ดาวน์โหลด PDF</button>
+        <button class="btn primary" id="printBtn">พิมพ์</button>
+      </div>
+    </div>
+
+    <section class="card no-print">
+      <div class="card-title">ข้อมูลสำหรับกรอง / ระบุงาน Audit</div>
+      <div class="filters">
+        <div class="field"><label>Audit No.</label><input id="auditNo" value="LPA-2026-001" /></div>
+        <div class="field"><label>วันที่ Audit</label><input id="auditDate" type="date" /></div>
+        <div class="field"><label>หน่วยงาน</label><select id="unit"><option>Stamping</option><option>Welding</option><option>CNC</option><option>Tapping</option><option>Bending</option><option>Assembly</option></select></div>
+        <div class="field"><label>Line / Area</label><input id="line" placeholder="เช่น Line 1" /></div>
+        <div class="field"><label>ระดับ LPA</label><select id="level"><option>Level 1</option><option selected>Level 2</option><option>Level 3</option><option>Level 4</option><option>Level 5</option></select></div>
+        <div class="field"><label>Auditor</label><input id="auditor" placeholder="ชื่อผู้ตรวจ" /></div>
+      </div>
+      <div class="saved" id="savedMsg"></div>
+    </section>
+
+    <section class="card summary-card no-print">
+      <div class="summary">
+        <div class="metric"><span>รายการทั้งหมด</span><b id="mTotal">0</b></div>
+        <div class="metric"><span>ตอบแล้ว</span><b id="mAnswered">0</b><div class="progress-track"><i id="progressBar"></i></div></div>
+        <div class="metric"><span>😊 OK</span><b id="mOk">0</b></div>
+        <div class="metric"><span>😐 Observation</span><b id="mObserve">0</b></div>
+        <div class="metric"><span>😒 NG</span><b id="mNg">0</b></div>
+      </div>
+    </section>
+
+    <section class="card" id="printArea">
+      <div class="print-title"><h2>Layered Process Audit (LPA)</h2><div class="print-meta" id="printMeta"></div></div>
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead><tr><th class="question">QUESTION</th><th class="comment">COMMENTS</th><th>N/A</th><th>😊</th><th>😐</th><th>😒</th></tr></thead>
+          <tbody id="auditBody"></tbody>
+        </table>
+      </div>
+      <div class="hint no-print">เลือกผลได้ 1 ค่า/ข้อ ระบบบันทึกร่างไว้ใน Browser เครื่องนี้ และสามารถ Export ผลปัจจุบันเป็น PDF หรือ Excel ได้</div>
+    </section>
+  </main>
+</div>
+<script>
+
+async function requireSession(){
+  const res=await fetch('/api/session',{credentials:'same-origin'});
+  if(!res.ok){location.replace('/login');return null}
+  const data=await res.json();
+  if(data.user.role!=='auditor' && data.user.role!=='admin'){location.replace('/login');return null}
+  document.getElementById('displayName').textContent=data.user.name;
+  document.getElementById('roleText').textContent=data.user.role==='admin'?'Admin access':'Audit access only';
+  document.getElementById('avatar').textContent=data.user.name.trim().split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase()||'AU';
+  const auditor=document.getElementById('auditor'); if(auditor && !auditor.value) auditor.value=data.user.name;
+  return data.user;
+}
+async function logout(){await fetch('/api/logout',{method:'POST',credentials:'same-origin'});location.replace('/login')}
+document.getElementById('logoutBtn').addEventListener('click',logout);
+
+const sections = [
+ {title:'1. Health, safety and environment', items:[
+  '1.1 พื้นที่การทำงานมีความสะอาดและเป็นระเบียบเรียบร้อย (ไม่มีเศษ, ฝุ่น, คราบน้ำ, น้ำมัน)',
+  '1.2 มีการสวมใส่อุปกรณ์ความปลอดภัยที่เหมาะสม (รองเท้าเซฟตี้, แว่นตา, ที่อุดหู, ถุงมือ)',
+  '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่',
+  '- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด',
+  '- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด',
+  '- ทางออก / ทางออกฉุกเฉินง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)',
+  '- สารเคมี/สารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว',
+  '1.4 ถังขยะและภาชนะบรรจุของวางอยู่ในพื้นที่มีป้ายบ่งชี้ / นำขยะมาทิ้งถูกต้องตามชนิดของป้ายหรือไม่']},
+ {title:'2. Communication', items:[
+  '2.1 พนักงานมีความตระหนักและทราบเกี่ยวกับเคลมลูกค้า/ปัญหาคุณภาพภายใน/ข้อบกพร่องภายในที่เชื่อมโยงกับกิจกรรมของพนักงาน เช่น Quality Alert หรือไม่',
+  '2.2 มีการอัปเดตข้อมูลที่บอร์ดให้ครบถ้วนและเป็นปัจจุบัน (เช่น CIP, Hangkate) หรือไม่']},
+ {title:'3. Operation instructions / work instructions / visual aids', items:[
+  '3.1 มีเอกสารมาตรฐานการปฏิบัติงานในพื้นที่การทำงานและพนักงานสามารถอ่านและเข้าใจได้ง่าย',
+  '3.2 พนักงานเข้าใจสิ่งที่อธิบายในเอกสารมาตรฐานการปฏิบัติงาน และเอกสารอธิบายขั้นตอนการปฏิบัติงานถูกต้องตามลำดับขั้นตอน',
+  '3.3 บันทึกอบรมของพนักงานมีข้อมูลเป็นปัจจุบัน',
+  '3.4 มาตรฐานการตรวจสอบด้วยสายตาง่ายต่อการเข้าถึงและอธิบายงานดี/งานเสียได้ชัดเจน',
+  '3.5 มีเอกสารในการปรับตั้งค่าของเครื่องจักรและพนักงานได้ปฏิบัติตามมาตรฐานนั้นหรือไม่',
+  '3.6 มีการ Rework ปฏิบัติตามขั้นตอนในเอกสารมาตรฐานการ Rework หรือไม่']},
+ {title:'4. Product identification, cleanliness and 5S', items:[
+  '4.1 ชิ้นส่วนงานที่ยังประกอบไม่เสร็จและชิ้นงานที่ประกอบเสร็จแล้วมีการบ่งชี้และจัดวางในพื้นที่ที่กำหนด และชิ้นงาน/บรรจุภัณฑ์อยู่ในสภาพดีหรือไม่',
+  '4.2 มีการควบคุมวัตถุดิบ/ชิ้นงานตามระบบ FIFO หรือไม่',
+  '4.3 พบชิ้นงานที่ไม่ได้ใช้ / ชิ้นส่วนที่อยู่ระหว่าง Machine / โต๊ะ / สถานที่การทำงาน / สายพาน หรือไม่',
+  '4.4 มีวิธีการเคลื่อนย้ายงานเหมาะสม (มีการใช้ถุงมือ/กล่อง/รถเข็น)']},
+ {title:'5. Process follow-up and control', items:[
+  '5.1 มีการดำเนินงานการผลิตตาม Parameter ที่ระบุในมาตรฐาน',
+  '5.2 มีการหยุดการผลิตเมื่อพบปัญหาและบันทึกหรือไม่',
+  '5.3 ในพื้นที่ที่มีการใช้ SPC พบมีจุดออกนอกเส้นควบคุมหรือไม่ พนักงานทราบ มีการบันทึกและมีการแก้ไขเมื่อค่าออกนอกเส้นควบคุม',
+  '5.4 มีการวัดความสามารถของกระบวนการบริเวณจุดที่ใช้ SPC และแสดงผลได้ในพื้นที่การผลิต']},
+ {title:'6. Measuring equipment and Error proof (Poka-yoke)', items:[
+  '6.1 ผู้ประกอบการทราบถึงอุปกรณ์ Poka Yoke ในพื้นที่การทำงาน เข้าใจการทำงานและความสำคัญของ Poka Yoke',
+  '6.2 Poka Yoke สามารถทำงานได้ตามมาตรฐานและมีการบันทึกการทวนสอบ',
+  '6.3 เครื่องมือวัดอยู่ในสภาพพร้อมใช้งาน มีการบ่งชี้ Calibration Label และจัดเก็บในพื้นที่ที่เหมาะสมไม่เสี่ยงต่อการชำรุด']},
+ {title:'7. Quality', items:[
+  '7.1 มีการบันทึกค่าตามรอบเวลา รวมถึงค่าปรับตั้งเครื่องจักร มีการควบคุมลงค่าถูกต้องตามจำนวนและความถี่',
+  '7.2 มีการควบคุมกระบวนการถูกต้องสมบูรณ์ เมื่อพบชิ้นงานที่ไม่เป็นไปตามข้อกำหนดมีการดำเนินการแก้ไข',
+  '7.3 มีการบ่งชี้ชิ้นงานที่ไม่เป็นไปตามข้อกำหนดหรือชิ้นงานต้องสงสัย โดยระบุโค้ดงานเสียและคัดแยกใส่กล่องแดง',
+  '7.4 มีกล่องแดงอยู่ในพื้นที่และอยู่ในสภาพดี ไม่พบสิ่งอื่นที่ไม่เกี่ยวข้องอยู่ข้างใน',
+  '7.5 มีงาน First-off และชิ้นงานได้ถูกจัดเก็บไว้',
+  '7.6 มีการปฏิบัติและแก้ไขปัญหาอย่างมีประสิทธิภาพ (หลังพบงานเคลม/ปัญหาของเสียภายใน)',
+  '7.7 สามารถตรวจสอบย้อนกลับได้เมื่อต้องการ (มีการระบุรายละเอียดใน Label และบันทึกครบถ้วน)',
+  '7.8 จุดควบคุมพิเศษด้านความปลอดภัยของผลิตภัณฑ์และพารามิเตอร์ของกระบวนการ รวมถึงจุดควบคุมพิเศษอื่น ๆ (ถ้ามี) เช่น จุด S, F, G ได้มีการตรวจสอบและลงบันทึกหรือไม่']},
+ {title:'8. Maintenance', items:[
+  '8.1 มี Spare Parts และเครื่องมือที่เกี่ยวข้องในพื้นที่ มีการจัดเก็บและรักษาในสภาพที่เหมาะสมและสามารถนำมาใช้งานได้',
+  '8.2 ได้มีการตรวจสอบเครื่องจักรประจำวัน TPM Daily Check Sheet ในพื้นที่การทำงานหรือไม่ และกรณีตรวจแล้วไม่ได้ตามมาตรฐาน มีการแก้ไขและบันทึกไว้หรือไม่']},
+ {title:'9. Layered process audit (LPA)', items:[
+  '9.1 มีการทำ Layered Audit (ตรวจสอบปัญหาที่ยังไม่ปิดจากการ Audit ครั้งที่แล้ว)',
+  '9.2 มีการดำเนินการแก้ไขปัญหาที่พบจากการ Audit ครั้งที่แล้วและมีการติดตามการแก้ไขปัญหา']},
+ {title:'10. Specific to work area (add necessary additional items)', custom:5}
+];
+
+const state = { answers:{}, comments:{}, custom:{} };
+const metaIds=['auditNo','auditDate','unit','line','level','auditor'];
+function todayLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+document.getElementById('auditDate').value=todayLocal();
+
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function renderTable(){
+ let html='', idx=0;
+ sections.forEach(sec=>{
+   html += `<tr class="section-row"><td colspan="6">${esc(sec.title)}</td></tr>`;
+   const items = sec.items || Array.from({length:sec.custom},(_,i)=>'');
+   items.forEach((q,i)=>{
+     const id='q'+idx; const sub=q.trim().startsWith('-'); const isCustom=!sec.items;
+     const qHtml=isCustom?`<input class="custom-q" data-id="${id}" value="${esc(state.custom[id]||'')}" placeholder="10.${i+1} เพิ่มรายการตรวจเฉพาะพื้นที่">`:`<div class="qtext ${sub?'subitem':''}">${esc(q)}</div>`;
+     html += `<tr data-qid="${id}"><td>${qHtml}</td><td><textarea class="comment" data-id="${id}" placeholder="Comments / หลักฐาน">${esc(state.comments[id]||'')}</textarea></td>${choiceCell(id,'na','N/A','na')}${choiceCell(id,'ok','😊','ok')}${choiceCell(id,'observe','😐','observe')}${choiceCell(id,'ng','😒','ng')}</tr>`;
+     idx++;
+   });
+ });
+ document.getElementById('auditBody').innerHTML=html;
+ bindRows(); updateSummary();
+}
+function choiceCell(id,value,label,cls){const checked=state.answers[id]===value?'checked':'';return `<td class="choice ${cls}"><input type="radio" name="${id}" id="${id}_${value}" value="${value}" ${checked}><label for="${id}_${value}">${label}</label></td>`}
+function bindRows(){
+ document.querySelectorAll('input[type=radio]').forEach(el=>el.addEventListener('change',e=>{state.answers[e.target.name]=e.target.value;updateSummary();autoSave()}));
+ document.querySelectorAll('.comment').forEach(el=>el.addEventListener('input',e=>{state.comments[e.target.dataset.id]=e.target.value;debouncedSave()}));
+ document.querySelectorAll('.custom-q').forEach(el=>el.addEventListener('input',e=>{state.custom[e.target.dataset.id]=e.target.value;debouncedSave()}));
+}
+function totalItems(){return sections.reduce((n,s)=>n+(s.items?s.items.length:s.custom),0)}
+function updateSummary(){const vals=Object.values(state.answers);const t=totalItems(),a=vals.length;document.getElementById('mTotal').textContent=t;document.getElementById('mAnswered').textContent=a;document.getElementById('mOk').textContent=vals.filter(v=>v==='ok').length;document.getElementById('mObserve').textContent=vals.filter(v=>v==='observe').length;document.getElementById('mNg').textContent=vals.filter(v=>v==='ng').length;document.getElementById('progressBar').style.width=(t?a/t*100:0)+'%'}
+function meta(){return Object.fromEntries(metaIds.map(id=>[id,document.getElementById(id).value]))}
+function storageKey(){return 'lpaAudit:'+((document.getElementById('auditNo').value||'draft').trim())}
+function save(show=true){localStorage.setItem(storageKey(),JSON.stringify({meta:meta(),state,updatedAt:new Date().toISOString()}));if(show){const el=document.getElementById('savedMsg');el.textContent='บันทึกร่างแล้วในเครื่องนี้';setTimeout(()=>el.textContent='',2200)}}
+let timer;function debouncedSave(){clearTimeout(timer);timer=setTimeout(()=>save(false),500)} function autoSave(){save(false)}
+function loadCurrent(){const raw=localStorage.getItem(storageKey());if(!raw)return;try{const d=JSON.parse(raw);Object.assign(state.answers,d.state?.answers||{});Object.assign(state.comments,d.state?.comments||{});Object.assign(state.custom,d.state?.custom||{});if(d.meta)metaIds.forEach(id=>{if(d.meta[id]!=null)document.getElementById(id).value=d.meta[id]});renderTable()}catch(e){console.warn(e)}}
+
+function rowsForExport(){let rows=[];let idx=0;sections.forEach(sec=>{rows.push([sec.title,'','','','','']);const items=sec.items||Array.from({length:sec.custom},(_,i)=>state.custom['q'+(idx+i)]||`10.${i+1}`);items.forEach(q=>{const id='q'+idx;const ans=state.answers[id]||'';rows.push([q,state.comments[id]||'',ans==='na'?'X':'',ans==='ok'?'X':'',ans==='observe'?'X':'',ans==='ng'?'X':'']);idx++})});return rows}
+function exportExcel(){
+ const m=meta();const info=[['Layered Process Audit (LPA)','','','','',''],['Audit No.',m.auditNo,'Date',m.auditDate,'Unit',m.unit],['Line / Area',m.line,'Level',m.level,'Auditor',m.auditor],[],['QUESTION','COMMENTS','N/A','😊','😐','😒'],...rowsForExport()];
+ const ws=XLSX.utils.aoa_to_sheet(info);ws['!cols']=[{wch:85},{wch:42},{wch:9},{wch:9},{wch:9},{wch:9}];ws['!merges']=[XLSX.utils.decode_range('A1:F1')];
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'LPA');XLSX.writeFile(wb,`${safeName(m.auditNo||'LPA_Audit')}.xlsx`);
+}
+function updatePrintMeta(){const m=meta();document.getElementById('printMeta').textContent=`Audit No.: ${m.auditNo||'-'}  |  Date: ${m.auditDate||'-'}  |  Unit: ${m.unit||'-'}  |  Line: ${m.line||'-'}  |  Level: ${m.level||'-'}  |  Auditor: ${m.auditor||'-'}`}
+async function exportPDF(){
+ updatePrintMeta();const node=document.getElementById('printArea');const {jsPDF}=window.jspdf;const canvas=await html2canvas(node,{scale:1.6,backgroundColor:'#ffffff',useCORS:true,windowWidth:node.scrollWidth});
+ const pdf=new jsPDF('l','mm','a4');const pageW=297,pageH=210,margin=7,usableW=pageW-margin*2,usableH=pageH-margin*2;const imgW=usableW;const imgH=canvas.height*imgW/canvas.width;let y=0,page=0;
+ while(y<imgH){if(page>0)pdf.addPage();const offset=-y+margin;pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',margin,offset,imgW,imgH);y+=usableH;page++}
+ pdf.save(`${safeName(document.getElementById('auditNo').value||'LPA_Audit')}.pdf`);
+}
+function safeName(s){return String(s).replace(/[\\/:*?"<>|]/g,'_')}
+
+document.getElementById('saveBtn').addEventListener('click',()=>save(true));document.getElementById('excelBtn').addEventListener('click',exportExcel);document.getElementById('pdfBtn').addEventListener('click',exportPDF);document.getElementById('printBtn').addEventListener('click',()=>{updatePrintMeta();window.print()});
+document.getElementById('auditNo').addEventListener('change',()=>{Object.keys(state.answers).forEach(k=>delete state.answers[k]);Object.keys(state.comments).forEach(k=>delete state.comments[k]);Object.keys(state.custom).forEach(k=>delete state.custom[k]);renderTable();loadCurrent()});metaIds.slice(1).forEach(id=>document.getElementById(id).addEventListener('change',debouncedSave));
+requireSession().then(user=>{if(!user)return;renderTable();loadCurrent();updatePrintMeta();});
+</script>
+</body>
+</html>
