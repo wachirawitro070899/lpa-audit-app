@@ -29,15 +29,16 @@
 <body>
 <div class="app">
   <header class="topnav">
-    <div class="brand">LAYERED PROCESS AUDIT<small>Auditor workspace</small></div>
-    <div class="user-chip"><div class="avatar" id="avatar">AU</div><div><b id="displayName">Auditor</b><div class="role" id="roleText">Audit access only</div></div><button class="logout-btn no-print" id="logoutBtn">ออกจากระบบ</button></div>
+    <div class="brand">LAYERED PROCESS AUDIT<small>Public data entry form</small></div>
+    <div class="user-chip"><div><b>Process Audit Form</b><div class="role">กรอกข้อมูลได้โดยไม่ต้อง Login</div></div></div>
   </header>
 
   <main class="page">
     <div class="page-head">
-      <div><h1>แบบฟอร์ม LPA Audit</h1><p>กรอกผลตรวจตามแบบ LPA จากไฟล์ Excel — ผู้ตรวจเห็นเฉพาะพื้นที่ทำ Audit เท่านั้น</p></div>
+      <div><h1>แบบฟอร์ม LPA Audit</h1><p>กรอกผลตรวจตามแบบ Process Audit และส่งข้อมูลเข้าสู่ระบบหลังบ้านโดยตรง</p></div>
       <div class="toolbar no-print">
         <button class="btn" id="saveBtn">บันทึกร่าง</button>
+        <button class="btn success" id="submitBtn">ส่งข้อมูล</button>
         <button class="btn" id="excelBtn">ดาวน์โหลด Excel</button>
         <button class="btn" id="pdfBtn">ดาวน์โหลด PDF</button>
         <button class="btn primary" id="printBtn">พิมพ์</button>
@@ -75,25 +76,13 @@
           <tbody id="auditBody"></tbody>
         </table>
       </div>
-      <div class="hint no-print">เลือกผลได้ 1 ค่า/ข้อ ระบบบันทึกร่างไว้ใน Browser เครื่องนี้ และสามารถ Export ผลปัจจุบันเป็น PDF หรือ Excel ได้</div>
+      <div class="hint no-print">เลือกผลได้ 1 ค่า/ข้อ สามารถบันทึกร่างไว้ในเครื่อง หรือกด “ส่งข้อมูล” เพื่อบันทึกเข้าระบบหลังบ้าน</div>
     </section>
   </main>
 </div>
 <script>
 
-async function requireSession(){
-  const res=await fetch('/api/session',{credentials:'same-origin'});
-  if(!res.ok){location.replace('/login');return null}
-  const data=await res.json();
-  if(data.user.role!=='auditor' && data.user.role!=='admin'){location.replace('/login');return null}
-  document.getElementById('displayName').textContent=data.user.name;
-  document.getElementById('roleText').textContent=data.user.role==='admin'?'Admin access':'Audit access only';
-  document.getElementById('avatar').textContent=data.user.name.trim().split(/\s+/).map(x=>x[0]||'').join('').slice(0,2).toUpperCase()||'AU';
-  const auditor=document.getElementById('auditor'); if(auditor && !auditor.value) auditor.value=data.user.name;
-  return data.user;
-}
-async function logout(){await fetch('/api/logout',{method:'POST',credentials:'same-origin'});location.replace('/login')}
-document.getElementById('logoutBtn').addEventListener('click',logout);
+// Public audit page: no login/session is required.
 
 const sections = [
  {title:'1. Health, safety and environment', items:[
@@ -182,6 +171,42 @@ function save(show=true){localStorage.setItem(storageKey(),JSON.stringify({meta:
 let timer;function debouncedSave(){clearTimeout(timer);timer=setTimeout(()=>save(false),500)} function autoSave(){save(false)}
 function loadCurrent(){const raw=localStorage.getItem(storageKey());if(!raw)return;try{const d=JSON.parse(raw);Object.assign(state.answers,d.state?.answers||{});Object.assign(state.comments,d.state?.comments||{});Object.assign(state.custom,d.state?.custom||{});if(d.meta)metaIds.forEach(id=>{if(d.meta[id]!=null)document.getElementById(id).value=d.meta[id]});renderTable()}catch(e){console.warn(e)}}
 
+
+function questionMap(){
+  const out={}; let idx=0;
+  sections.forEach(sec=>{
+    const items=sec.items||Array.from({length:sec.custom},(_,i)=>state.custom['q'+(idx+i)]||`10.${i+1}`);
+    items.forEach(q=>{out['q'+idx]=q;idx++});
+  });
+  return out;
+}
+function requiredQuestionIds(){
+  const ids=[]; let idx=0;
+  sections.forEach(sec=>{
+    if(sec.items){sec.items.forEach(()=>ids.push('q'+idx++));}
+    else{for(let i=0;i<sec.custom;i++){const id='q'+idx++;if((state.custom[id]||'').trim())ids.push(id)}}
+  });
+  return ids;
+}
+async function submitAudit(){
+  const m=meta();
+  const missingMeta=metaIds.filter(id=>!String(m[id]||'').trim());
+  if(missingMeta.length){alert('กรุณากรอกข้อมูลส่วนหัวให้ครบถ้วน');return}
+  const required=requiredQuestionIds();
+  const unanswered=required.filter(id=>!state.answers[id]);
+  if(unanswered.length){alert(`ยังมีรายการที่ไม่ได้เลือกผล ${unanswered.length} ข้อ กรุณาตอบให้ครบก่อนส่งข้อมูล`);return}
+  const vals=Object.values(state.answers);
+  const payload={meta:m,state:{answers:state.answers,comments:state.comments,custom:state.custom,questions:questionMap()},summary:{total:required.length,answered:required.length,ok:vals.filter(v=>v==='ok').length,observe:vals.filter(v=>v==='observe').length,ng:vals.filter(v=>v==='ng').length,na:vals.filter(v=>v==='na').length}};
+  const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
+  try{
+    const r=await fetch('/api/audits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||'ส่งข้อมูลไม่สำเร็จ');
+    localStorage.removeItem(storageKey());
+    document.getElementById('savedMsg').textContent=`ส่งข้อมูลสำเร็จ · ${m.auditNo}`;
+    alert('ส่งข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
+  }catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent='ส่งข้อมูล'}
+}
+
 function rowsForExport(){let rows=[];let idx=0;sections.forEach(sec=>{rows.push([sec.title,'','','','','']);const items=sec.items||Array.from({length:sec.custom},(_,i)=>state.custom['q'+(idx+i)]||`10.${i+1}`);items.forEach(q=>{const id='q'+idx;const ans=state.answers[id]||'';rows.push([q,state.comments[id]||'',ans==='na'?'X':'',ans==='ok'?'X':'',ans==='observe'?'X':'',ans==='ng'?'X':'']);idx++})});return rows}
 function exportExcel(){
  const m=meta();const info=[['Layered Process Audit (LPA)','','','','',''],['Audit No.',m.auditNo,'Date',m.auditDate,'Unit',m.unit],['Line / Area',m.line,'Level',m.level,'Auditor',m.auditor],[],['QUESTION','COMMENTS','N/A','😊','😐','😒'],...rowsForExport()];
@@ -197,9 +222,9 @@ async function exportPDF(){
 }
 function safeName(s){return String(s).replace(/[\\/:*?"<>|]/g,'_')}
 
-document.getElementById('saveBtn').addEventListener('click',()=>save(true));document.getElementById('excelBtn').addEventListener('click',exportExcel);document.getElementById('pdfBtn').addEventListener('click',exportPDF);document.getElementById('printBtn').addEventListener('click',()=>{updatePrintMeta();window.print()});
+document.getElementById('saveBtn').addEventListener('click',()=>save(true));document.getElementById('submitBtn').addEventListener('click',submitAudit);document.getElementById('excelBtn').addEventListener('click',exportExcel);document.getElementById('pdfBtn').addEventListener('click',exportPDF);document.getElementById('printBtn').addEventListener('click',()=>{updatePrintMeta();window.print()});
 document.getElementById('auditNo').addEventListener('change',()=>{Object.keys(state.answers).forEach(k=>delete state.answers[k]);Object.keys(state.comments).forEach(k=>delete state.comments[k]);Object.keys(state.custom).forEach(k=>delete state.custom[k]);renderTable();loadCurrent()});metaIds.slice(1).forEach(id=>document.getElementById(id).addEventListener('change',debouncedSave));
-requireSession().then(user=>{if(!user)return;renderTable();loadCurrent();updatePrintMeta();});
+renderTable();loadCurrent();updatePrintMeta();
 </script>
 </body>
 </html>

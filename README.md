@@ -1,65 +1,55 @@
-# LPA Audit App - Login + Role Based Access
+# LPA / Process Audit App - Public Form + Admin Login
 
-เวอร์ชันนี้เพิ่ม Login และตรวจสิทธิ์ที่ Server แล้ว ไม่ได้อาศัยการซ่อนเมนูด้วย Frontend เพียงอย่างเดียว
+ระบบถูกแยกเป็น 2 ส่วนชัดเจน:
 
-## สิทธิ์
+- **หน้ากรอกข้อมูล** `/audit` — เปิดใช้งานได้โดยไม่ต้อง Login
+- **ระบบหลังบ้าน** `/admin` — ต้อง Login ก่อนเท่านั้น
+- หน้า Login: `/login`
+- ข้อมูลที่กด **ส่งข้อมูล** จะบันทึกฝั่ง Server ที่ `data/audits.json`
+- Admin สามารถดูรายการ, ค้นหา, เปิดรายละเอียด และลบรายการได้
+- ผู้กรอกไม่สามารถเรียกดูรายการ Audit ทั้งหมดผ่าน API ได้
 
-- **Auditor**: เข้า `/audit` ได้ และไม่สามารถเข้า `/admin` ได้ (Server ตอบ `403 Forbidden`)
-- **Admin**: เข้าได้ทั้ง `/admin` และ `/audit`
-- ทุกหน้า protected ตรวจ session ก่อนเสิร์ฟไฟล์
-- Session cookie เป็น `HttpOnly` + `SameSite=Strict`
-- Password ตรวจด้วย `scrypt` hash
+## บัญชี Admin ทดลอง
 
-## บัญชีทดลอง
-
-- Auditor: `auditor` / `Audit@123`
-- Admin: `admin` / `Admin@123`
+- Username: `admin`
+- Password: `Admin@123`
 
 > ห้ามใช้รหัสผ่านทดลองนี้ใน Production
 
 ## วิธีรัน
 
-ต้องมี Node.js 18 ขึ้นไป และไม่ต้อง `npm install` เพราะ server ใช้ Node built-in modules เท่านั้น
+ต้องมี Node.js 18 ขึ้นไป ไม่ต้องติดตั้ง package เพิ่ม
 
 ```bash
 node server.js
 ```
 
-จากนั้นเปิด `http://localhost:3000`
+เปิดใช้งาน:
 
-## ตั้งรหัสผ่านก่อนใช้งานจริง
+- กรอกข้อมูล: `http://localhost:3000/audit`
+- หลังบ้าน: `http://localhost:3000/admin`
+
+## ตั้งรหัสผ่าน Admin ก่อนใช้งานจริง
 
 Linux/macOS:
 
 ```bash
-ADMIN_PASSWORD='your-strong-admin-password' AUDITOR_PASSWORD='your-strong-auditor-password' node server.js
+ADMIN_PASSWORD='your-strong-admin-password' node server.js
 ```
 
 Windows PowerShell:
 
 ```powershell
 $env:ADMIN_PASSWORD='your-strong-admin-password'
-$env:AUDITOR_PASSWORD='your-strong-auditor-password'
 node server.js
 ```
 
-ชื่อผู้ใช้ทดลองยังเป็น `admin` และ `auditor` ใน prototype นี้ หากต้องการผู้ใช้หลายคน ควรเชื่อมฐานข้อมูล/Active Directory/SSO ในขั้นต่อไป
-
-## Production security checklist
+## Production checklist
 
 1. ใช้ HTTPS และตั้ง `COOKIE_SECURE=1`
-2. เก็บ Users/Password Hash ในฐานข้อมูลหรือเชื่อม AD/SSO ไม่เก็บบัญชีไว้ใน source code
-3. ใช้ persistent session store เช่น Redis/Database แทน in-memory session
-4. เพิ่ม CSRF protection สำหรับ API ที่แก้ไขข้อมูล
-5. เพิ่ม rate limit / lockout สำหรับหน้า Login
-6. บันทึก Audit Log การ login, logout และการเปลี่ยนข้อมูล
-7. ย้าย Draft/Audit record จาก localStorage ไปเก็บใน Database พร้อมตรวจ role ทุก API request
-
-## ฟังก์ชัน Audit เดิม
-
-- ฟอร์ม LPA ครบหมวด 1-10
-- N/A / 😊 / 😐 / 😒 และ Comments
-- Save Draft ใน Browser
-- Export Excel
-- Export PDF
-- Print
+2. เปลี่ยนจากไฟล์ JSON เป็น Database เช่น PostgreSQL / MySQL / SQL Server
+3. ใช้ persistent session store แทน in-memory session
+4. เพิ่ม CSRF protection สำหรับ API หลังบ้าน
+5. เพิ่ม rate limit / account lockout สำหรับ Login
+6. บันทึก Audit Log ของ Admin
+7. สำรองฐานข้อมูลและกำหนดสิทธิ์ OS ของไฟล์ข้อมูล
