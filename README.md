@@ -1,42 +1,14 @@
-# LPA / Process Audit App - Public Form + Admin Login
+# LPA / Process Audit App - GitHub Pages + Firebase
 
 ระบบถูกแยกเป็น 2 ส่วนชัดเจน:
 
-- **หน้าพนักงานกรอกข้อมูล** `/employee` — เปิดใช้งานได้โดยไม่ต้อง Login และไม่มีเมนูระบบหลังบ้าน
-- URL เดิม `/audit` ยังใช้งานได้ เพื่อไม่ให้ลิงก์เดิมเสีย
-- **ระบบหลังบ้าน** `/admin` — ต้อง Login ก่อนเท่านั้น
-- หน้า Login: `/login`
-- ข้อมูลที่กด **ส่งข้อมูล** จะบันทึกฝั่ง Server ที่ `data/audits.json`
+- **หน้าพนักงานกรอกข้อมูล** `audit.html` — เปิดใช้งานได้โดยไม่ต้อง Login และไม่มีเมนูระบบหลังบ้าน
+- **ระบบหลังบ้าน** `admin.html` — ต้อง Login ผ่าน `login.html` ก่อน
+- ข้อมูลที่กด **ส่งข้อมูล** จะบันทึกที่ Firebase Realtime Database ใน `lpaAudits`
 - Admin สามารถดูรายการ, ค้นหา, เปิดรายละเอียด และลบรายการได้
 - ผู้กรอกไม่สามารถเรียกดูรายการ Audit ทั้งหมดผ่าน API ได้
 
-## วิธีรัน
-
-ต้องมี Node.js 18 ขึ้นไป ไม่ต้องติดตั้ง package เพิ่ม
-
-ตั้งค่า `ADMIN_PASSWORD` ก่อนเริ่มระบบตามตัวอย่างด้านล่าง
-
-เปิดใช้งาน:
-
-- กรอกข้อมูล: `http://localhost:3000/employee`
-- หลังบ้าน: `http://localhost:3000/admin`
-
-## ตั้งรหัสผ่าน Admin ก่อนใช้งานจริง
-
-Username เริ่มต้นคือ `Kittiya` และสามารถเปลี่ยนผ่าน `ADMIN_USERNAME` ได้
-
-Linux/macOS:
-
-```bash
-ADMIN_PASSWORD='your-strong-admin-password' node server.js
-```
-
-Windows PowerShell:
-
-```powershell
-$env:ADMIN_PASSWORD='your-strong-admin-password'
-node server.js
-```
+เปิดใช้งานผ่าน GitHub Pages ได้โดยตรง ไม่ต้องรัน Node.js
 
 ## Production checklist
 

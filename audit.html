@@ -10,6 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
     :root{--nav:#0d233f;--blue:#2563eb;--bg:#f4f7fb;--card:#fff;--text:#182230;--muted:#64748b;--line:#dfe6ef;--green:#16a34a;--amber:#d97706;--red:#dc2626;--soft:#f8fafc}
     *{box-sizing:border-box} body{margin:0;font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--text)}
@@ -199,8 +202,10 @@ async function submitAudit(){
   const payload={meta:m,state:{answers:state.answers,comments:state.comments,custom:state.custom,questions:questionMap()},summary:{total:required.length,answered:required.length,ok:vals.filter(v=>v==='ok').length,observe:vals.filter(v=>v==='observe').length,ng:vals.filter(v=>v==='ng').length,na:vals.filter(v=>v==='na').length}};
   const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
   try{
-    const r=await fetch('/api/audits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const d=await r.json();if(!r.ok)throw new Error(d.error||'ส่งข้อมูลไม่สำเร็จ');
+    if(!window.firebase)throw new Error('โหลด Firebase ไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ต');
+    if(!firebase.apps.length)firebase.initializeApp(window.LPA_FIREBASE_CONFIG);
+    const ref=firebase.database().ref('lpaAudits').push();
+    await ref.set({id:ref.key,createdAt:new Date().toISOString(),...payload});
     localStorage.removeItem(storageKey());
     document.getElementById('savedMsg').textContent=`ส่งข้อมูลสำเร็จ · ${m.auditNo}`;
     alert('ส่งข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
