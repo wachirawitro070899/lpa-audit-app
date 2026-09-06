@@ -23,6 +23,7 @@
     .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.metric{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:11px}.metric span{display:block;font-size:11px;color:var(--muted)}.metric b{font-size:20px}.progress-track{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:7px}.progress-track i{display:block;height:100%;background:var(--blue);width:0}
     .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}.audit-table{border-collapse:separate;border-spacing:0;width:100%;min-width:1050px;font-size:12px}.audit-table th,.audit-table td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top}.audit-table th:last-child,.audit-table td:last-child{border-right:0}.audit-table tr:last-child td{border-bottom:0}.audit-table thead th{position:static;background:#0f2746;color:#fff;text-align:center;vertical-align:middle}.audit-table th.question{min-width:520px;text-align:left}.audit-table th.comment{min-width:290px}.section-row td{background:#eaf1fb;font-weight:700;color:#12375f;padding:10px}.qtext{line-height:1.55;min-height:34px;white-space:normal;overflow-wrap:anywhere}.subitem{padding-left:24px;color:#475569}.comment{width:100%;min-height:54px;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:7px;font:inherit;font-size:12px}.choice{text-align:center;vertical-align:middle!important;min-width:62px}.choice input{display:none}.choice label{display:inline-grid;place-items:center;min-width:40px;height:34px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-weight:600}.choice input:checked+label{border-color:#2563eb;background:#dbeafe;box-shadow:0 0 0 2px #bfdbfe inset}.choice.na input:checked+label{background:#e2e8f0;border-color:#64748b}.choice.ok input:checked+label{background:#dcfce7;border-color:#22c55e}.choice.observe input:checked+label{background:#fef3c7;border-color:#f59e0b}.choice.ng input:checked+label{background:#fee2e2;border-color:#ef4444}.custom-q{width:100%;border:1px dashed #94a3b8;border-radius:7px;padding:8px;font:inherit;font-size:12px;background:#fff}.hint{font-size:11px;color:var(--muted);margin-top:8px}.saved{font-size:12px;color:var(--green);min-height:18px;margin-top:8px}
     .print-title{display:none}
+    .summary-card{display:none!important}
     .submit-footer{display:flex;justify-content:flex-end;padding-top:16px}.submit-footer .btn{min-width:220px;height:48px;font-size:15px;font-weight:700}
     .evidence-tools{display:flex;align-items:center;gap:8px;margin-top:7px}.evidence-input{display:none}.evidence-add,.evidence-remove{border:1px solid var(--line);border-radius:7px;background:#fff;padding:6px 9px;font:inherit;font-size:11px;cursor:pointer}.evidence-remove{color:var(--red)}.evidence-preview{display:block;max-width:150px;max-height:100px;margin-top:7px;border:1px solid var(--line);border-radius:8px;object-fit:cover}
     @media(max-width:1050px){.filters{grid-template-columns:repeat(3,1fr)}.summary{grid-template-columns:repeat(3,1fr)}}
@@ -221,9 +222,26 @@ async function submitAudit(){
     const ref=firebase.database().ref('lpaAudits').push();
     await ref.set({id:ref.key,createdAt:new Date().toISOString(),...payload});
     localStorage.removeItem(storageKey());
-    document.getElementById('savedMsg').textContent=`ส่งข้อมูลสำเร็จ · ${m.auditNo}`;
     alert('ส่งข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
+    resetAuditForm();
   }catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent='ส่งข้อมูล'}
+}
+
+function resetAuditForm(){
+  Object.keys(state.answers).forEach(k=>delete state.answers[k]);
+  Object.keys(state.comments).forEach(k=>delete state.comments[k]);
+  Object.keys(state.custom).forEach(k=>delete state.custom[k]);
+  Object.keys(state.images).forEach(k=>delete state.images[k]);
+  document.getElementById('auditNo').value='';
+  document.getElementById('auditDate').value=todayLocal();
+  document.getElementById('unit').selectedIndex=0;
+  document.getElementById('line').value='';
+  document.getElementById('level').selectedIndex=0;
+  document.getElementById('auditor').value='';
+  document.getElementById('savedMsg').textContent='พร้อมเริ่มกรอก Audit รายการใหม่';
+  renderTable();
+  updatePrintMeta();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function rowsForExport(){let rows=[];let idx=0;sections.forEach(sec=>{rows.push([sec.title,'','','','','']);const items=sec.items||Array.from({length:sec.custom},(_,i)=>state.custom['q'+(idx+i)]||`10.${i+1}`);items.forEach(q=>{const id='q'+idx;const ans=state.answers[id]||'';rows.push([q,ans==='na'?'X':'',ans==='ok'?'X':'',ans==='observe'?'X':'',ans==='ng'?'X':'',state.comments[id]||'']);idx++})});return rows}
