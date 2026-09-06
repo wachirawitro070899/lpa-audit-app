@@ -185,6 +185,7 @@ function bindRows(){
 }
 function compressImage(file){return new Promise((resolve,reject)=>{if(!file.type.startsWith('image/'))return reject(new Error('กรุณาเลือกไฟล์รูปภาพ'));const reader=new FileReader();reader.onerror=()=>reject(new Error('อ่านรูปไม่สำเร็จ'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('รูปภาพไม่ถูกต้อง'));img.onload=()=>{const max=1280,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',.7);if(data.length>700000)return reject(new Error('รูปมีขนาดใหญ่เกินไป กรุณาเลือกรูปอื่น'));resolve(data)};img.src=reader.result};reader.readAsDataURL(file)})}
 function totalItems(){return sections.reduce((n,s)=>n+(s.items?s.items.length:s.custom),0)}
+function scorePercent(vals=Object.values(state.answers)){const ok=vals.filter(v=>v==='ok').length,observe=vals.filter(v=>v==='observe').length,ng=vals.filter(v=>v==='ng').length,scored=ok+observe+ng;return scored?Math.round(((ok*2+observe)/(scored*2))*1000)/10:0}
 function updateSummary(){const vals=Object.values(state.answers);const t=totalItems(),a=vals.length;document.getElementById('mTotal').textContent=t;document.getElementById('mAnswered').textContent=a;document.getElementById('mOk').textContent=vals.filter(v=>v==='ok').length;document.getElementById('mObserve').textContent=vals.filter(v=>v==='observe').length;document.getElementById('mNg').textContent=vals.filter(v=>v==='ng').length;document.getElementById('progressBar').style.width=(t?a/t*100:0)+'%'}
 function meta(){return Object.fromEntries(metaIds.map(id=>[id,document.getElementById(id).value]))}
 function storageKey(){return 'lpaAudit:'+((document.getElementById('auditNo').value||'draft').trim())}
@@ -218,7 +219,8 @@ async function submitAudit(){
   const unanswered=required.filter(id=>!state.answers[id]);
   if(unanswered.length){alert(`ยังมีรายการที่ไม่ได้เลือกผล ${unanswered.length} ข้อ กรุณาตอบให้ครบก่อนส่งข้อมูล`);return}
   const vals=Object.values(state.answers);
-  const payload={meta:m,state:{answers:state.answers,comments:state.comments,custom:state.custom,images:state.images,questions:questionMap()},summary:{total:required.length,answered:required.length,ok:vals.filter(v=>v==='ok').length,observe:vals.filter(v=>v==='observe').length,ng:vals.filter(v=>v==='ng').length,na:vals.filter(v=>v==='na').length}};
+  const score=scorePercent(vals);
+  const payload={meta:m,state:{answers:state.answers,comments:state.comments,custom:state.custom,images:state.images,questions:questionMap()},summary:{total:required.length,answered:required.length,ok:vals.filter(v=>v==='ok').length,observe:vals.filter(v=>v==='observe').length,ng:vals.filter(v=>v==='ng').length,na:vals.filter(v=>v==='na').length,scorePercent:score}};
   if(JSON.stringify(payload).length>7000000){alert('รูปหลักฐานรวมมีขนาดใหญ่เกินไป กรุณาลบบางรูปก่อนส่ง');return}
   const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='กำลังส่ง...';
   try{
@@ -227,7 +229,7 @@ async function submitAudit(){
     const ref=firebase.database().ref('lpaAudits').push();
     await ref.set({id:ref.key,createdAt:new Date().toISOString(),...payload});
     localStorage.removeItem(storageKey());
-    alert('ส่งข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว');
+    alert(`ส่งข้อมูลเข้าสู่ระบบเรียบร้อยแล้ว\nคะแนนรวม ${score.toFixed(1)}%`);
     resetAuditForm();
   }catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent='ส่งข้อมูล'}
 }
