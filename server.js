@@ -111,6 +111,7 @@ const server = http.createServer(async (req, res) => {
 
   // Back office only.
   if (req.method === 'GET' && pathname === '/login') return serveFile(res,'login.html');
+  if (req.method === 'GET' && pathname === '/login.html') return serveFile(res,'login.html');
   if (req.method === 'GET' && pathname === '/admin') return requireAdmin(req,res,'admin.html');
 
   if (req.method === 'GET' && pathname === '/api/session') {
