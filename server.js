@@ -11,6 +11,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const AUDITS_FILE = path.join(DATA_DIR, 'audits.json');
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const sessions = new Map();
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Kittiya';
 
 if (!process.env.ADMIN_PASSWORD) {
   console.error('ADMIN_PASSWORD environment variable is required');
@@ -28,7 +29,7 @@ function userRecord(username, password, role, name) {
   return { username, role, name, salt, hash: hashPassword(password, salt) };
 }
 const users = new Map([
-  ['admin', userRecord('admin', process.env.ADMIN_PASSWORD, 'admin', process.env.ADMIN_NAME || 'LPA Administrator')],
+  [ADMIN_USERNAME, userRecord(ADMIN_USERNAME, process.env.ADMIN_PASSWORD, 'admin', process.env.ADMIN_NAME || 'Kittiya')],
 ]);
 
 function parseCookies(req) {

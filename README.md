@@ -23,6 +23,8 @@
 
 ## ตั้งรหัสผ่าน Admin ก่อนใช้งานจริง
 
+Username เริ่มต้นคือ `Kittiya` และสามารถเปลี่ยนผ่าน `ADMIN_USERNAME` ได้
+
 Linux/macOS:
 
 ```bash
