@@ -59,13 +59,14 @@
 
     <section class="card no-print">
       <div class="card-title">ข้อมูลผู้ตรวจและงาน Audit</div>
+      <input id="auditNo" type="hidden" />
       <div class="filters">
-        <div class="field"><label>Audit No.</label><input id="auditNo" value="LPA-2026-001" /></div>
         <div class="field"><label>วันที่ Audit</label><input id="auditDate" type="date" /></div>
-        <div class="field"><label>หน่วยงานที่รับผิดชอบ</label><select id="unit"><option>QMM</option><option>VSM</option><option>TEF</option><option>WH</option></select></div>
         <div class="field"><label>Line / Area</label><select id="line"><option value="" selected disabled>เลือก Line / Area</option><option>Area 1 SHOE ROLLING &amp; PLATING</option><option>Area 2 SHOE BPNDING &amp; GRINDING</option><option>Area 3 U375 PARKBANK ASSY</option><option>Area 4 SERVICE KIT CALIPER KIT/GMSPO/J97</option><option>Area 5 CALIPER MACHINING LINE 1 (U375, THIN BRIDGE, APB-Mi Op10)</option><option>Area 6 CALIPER MACHINING LINE 2 (T6, P2-30A, APB-Mi Op20)</option><option>Area 7 CALIPER ASSYMBLY T6/PBR</option><option>Area 8 CALIPER ASSYMBLY LLD (U375/P2-30A/YHIN BRIDGE/APB-Mi)</option><option>Area 9 LOGISTIC-INBOUND &amp; OUTBOUND</option><option>Area 10 LOGISTIC-DECANTING</option><option>Area 11 QMM-INCOMING &amp; SP12 &amp; QUARANTINE MANAGEMENT</option><option>Area 12 MAINTENANCE</option></select></div>
-        <div class="field"><label>ระดับ LPA</label><select id="level"><option>Level 1</option><option selected>Level 2</option><option>Level 3</option></select></div>
+        <div class="field"><label>Audit Level</label><select id="level"><option value="" selected disabled>เลือก Audit Level</option><option>Level 1</option><option>Level 2</option><option>Level 3</option></select></div>
         <div class="field"><label>Auditor</label><input id="auditor" placeholder="ชื่อผู้ตรวจ" /></div>
+        <div class="field"><label>Function</label><select id="unit"><option value="" selected disabled>เลือก Function</option><option>QMM</option><option>TEF</option><option>VSM</option><option>WH</option></select></div>
+        <div class="field"><label>Auditee</label><input id="auditee" placeholder="ชื่อผู้รับการตรวจ" /></div>
       </div>
       <div class="saved" id="savedMsg"></div>
     </section>
@@ -150,8 +151,10 @@ const sections = [
 ];
 
 const state = { answers:{}, comments:{}, custom:{}, images:{} };
-const metaIds=['auditNo','auditDate','unit','line','level','auditor'];
+const metaIds=['auditNo','auditDate','line','level','auditor','unit','auditee'];
 function todayLocal(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function newAuditNo(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `LPA-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`}
+document.getElementById('auditNo').value=newAuditNo();
 document.getElementById('auditDate').value=todayLocal();
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
@@ -232,12 +235,13 @@ function resetAuditForm(){
   Object.keys(state.comments).forEach(k=>delete state.comments[k]);
   Object.keys(state.custom).forEach(k=>delete state.custom[k]);
   Object.keys(state.images).forEach(k=>delete state.images[k]);
-  document.getElementById('auditNo').value='';
+  document.getElementById('auditNo').value=newAuditNo();
   document.getElementById('auditDate').value=todayLocal();
-  document.getElementById('unit').selectedIndex=0;
   document.getElementById('line').selectedIndex=0;
   document.getElementById('level').selectedIndex=0;
   document.getElementById('auditor').value='';
+  document.getElementById('unit').selectedIndex=0;
+  document.getElementById('auditee').value='';
   document.getElementById('savedMsg').textContent='พร้อมเริ่มกรอก Audit รายการใหม่';
   renderTable();
   updatePrintMeta();
@@ -246,11 +250,11 @@ function resetAuditForm(){
 
 function rowsForExport(){let rows=[];let idx=0;sections.forEach(sec=>{rows.push([sec.title,'','','','','']);const items=sec.items||Array.from({length:sec.custom},(_,i)=>state.custom['q'+(idx+i)]||`10.${i+1}`);items.forEach(q=>{const id='q'+idx;const ans=state.answers[id]||'';rows.push([q,ans==='na'?'X':'',ans==='ok'?'X':'',ans==='observe'?'X':'',ans==='ng'?'X':'',state.comments[id]||'']);idx++})});return rows}
 function exportExcel(){
- const m=meta();const info=[['Layered Process Audit (LPA)','','','','',''],['Audit No.',m.auditNo,'Date',m.auditDate,'Unit',m.unit],['Line / Area',m.line,'Level',m.level,'Auditor',m.auditor],[],['QUESTION','N/A','😊','😐','😒','COMMENTS'],...rowsForExport()];
+ const m=meta();const info=[['Layered Process Audit (LPA)','','','','',''],['Audit No.',m.auditNo,'Date',m.auditDate,'Function',m.unit],['Line / Area',m.line,'Level',m.level,'Auditor',m.auditor],['Auditee',m.auditee,'','','',''],[],['QUESTION','N/A','😊','😐','😒','COMMENTS'],...rowsForExport()];
  const ws=XLSX.utils.aoa_to_sheet(info);ws['!cols']=[{wch:85},{wch:9},{wch:9},{wch:9},{wch:9},{wch:42}];ws['!merges']=[XLSX.utils.decode_range('A1:F1')];
  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'LPA');XLSX.writeFile(wb,`${safeName(m.auditNo||'LPA_Audit')}.xlsx`);
 }
-function updatePrintMeta(){const m=meta();document.getElementById('printMeta').textContent=`Audit No.: ${m.auditNo||'-'}  |  Date: ${m.auditDate||'-'}  |  Unit: ${m.unit||'-'}  |  Line: ${m.line||'-'}  |  Level: ${m.level||'-'}  |  Auditor: ${m.auditor||'-'}`}
+function updatePrintMeta(){const m=meta();document.getElementById('printMeta').textContent=`Audit No.: ${m.auditNo||'-'}  |  Date: ${m.auditDate||'-'}  |  Line: ${m.line||'-'}  |  Level: ${m.level||'-'}  |  Auditor: ${m.auditor||'-'}  |  Function: ${m.unit||'-'}  |  Auditee: ${m.auditee||'-'}`}
 async function exportPDF(){
  updatePrintMeta();const node=document.getElementById('printArea');const {jsPDF}=window.jspdf;const canvas=await html2canvas(node,{scale:1.6,backgroundColor:'#ffffff',useCORS:true,windowWidth:node.scrollWidth});
  const pdf=new jsPDF('l','mm','a4');const pageW=297,pageH=210,margin=7,usableW=pageW-margin*2,usableH=pageH-margin*2;const imgW=usableW;const imgH=canvas.height*imgW/canvas.width;let y=0,page=0;
@@ -260,7 +264,7 @@ async function exportPDF(){
 function safeName(s){return String(s).replace(/[\\/:*?"<>|]/g,'_')}
 
 document.getElementById('saveBtn').addEventListener('click',()=>save(true));document.getElementById('submitBtn').addEventListener('click',submitAudit);document.getElementById('excelBtn').addEventListener('click',exportExcel);document.getElementById('pdfBtn').addEventListener('click',exportPDF);document.getElementById('printBtn').addEventListener('click',()=>{updatePrintMeta();window.print()});
-document.getElementById('auditNo').addEventListener('change',()=>{Object.keys(state.answers).forEach(k=>delete state.answers[k]);Object.keys(state.comments).forEach(k=>delete state.comments[k]);Object.keys(state.custom).forEach(k=>delete state.custom[k]);Object.keys(state.images).forEach(k=>delete state.images[k]);renderTable();loadCurrent()});metaIds.slice(1).forEach(id=>document.getElementById(id).addEventListener('change',debouncedSave));
+metaIds.slice(1).forEach(id=>document.getElementById(id).addEventListener('change',debouncedSave));
 renderTable();loadCurrent();updatePrintMeta();
 </script>
 </body>
