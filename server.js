@@ -12,6 +12,11 @@ const AUDITS_FILE = path.join(DATA_DIR, 'audits.json');
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const sessions = new Map();
 
+if (!process.env.ADMIN_PASSWORD) {
+  console.error('ADMIN_PASSWORD environment variable is required');
+  process.exit(1);
+}
+
 fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(AUDITS_FILE)) fs.writeFileSync(AUDITS_FILE, '[]\n', 'utf8');
 
@@ -23,7 +28,7 @@ function userRecord(username, password, role, name) {
   return { username, role, name, salt, hash: hashPassword(password, salt) };
 }
 const users = new Map([
-  ['admin', userRecord('admin', process.env.ADMIN_PASSWORD || 'Admin@123', 'admin', process.env.ADMIN_NAME || 'LPA Administrator')],
+  ['admin', userRecord('admin', process.env.ADMIN_PASSWORD, 'admin', process.env.ADMIN_NAME || 'LPA Administrator')],
 ]);
 
 function parseCookies(req) {
@@ -98,8 +103,9 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = url.pathname;
 
-  // Public data-entry area: no login required.
-  if (req.method === 'GET' && pathname === '/') { res.writeHead(302,{Location:'/audit'}); return res.end(); }
+  // Employee data-entry area: intentionally separate from the admin back office.
+  if (req.method === 'GET' && pathname === '/') { res.writeHead(302,{Location:'/employee'}); return res.end(); }
+  if (req.method === 'GET' && pathname === '/employee') return serveFile(res,'audit.html');
   if (req.method === 'GET' && pathname === '/audit') return serveFile(res,'audit.html');
 
   // Back office only.
