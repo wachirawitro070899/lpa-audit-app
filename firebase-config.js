@@ -115,3 +115,63 @@ window.LPA_FIREBASE_CONFIG = {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installEvaluationRating);
   else installEvaluationRating();
 })();
+
+// Force the current audit structure after audit.html has finished declaring its variables.
+// This is intentionally retried because firebase-config.js is loaded in <head> before the audit script.
+(function () {
+  let tries = 0;
+  const timer = setInterval(function () {
+    tries++;
+    try {
+      if (typeof sections === 'undefined' || typeof renderTable !== 'function') {
+        if (tries > 200) clearInterval(timer);
+        return;
+      }
+
+      clearInterval(timer);
+
+      // 1) Combine 1.3 and all of its sub-items into a single question / single score.
+      const safety = sections.find(sec => String(sec.title || '').startsWith('1. Health'));
+      if (safety && Array.isArray(safety.items)) {
+        const i13 = safety.items.findIndex(item => String(item).startsWith('1.3 '));
+        if (i13 >= 0) {
+          const combined13 = '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่ เช่น มีใบอนุญาตขับรถโฟร์กลิฟท์และเรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด / มีการใช้เส้นทางเดินตามที่บริษัทกำหนด / ทางออกและทางออกฉุกเฉิน รวมถึงอุปกรณ์ป้องกันไฟไหม้ ไม่มีสิ่งกีดขวาง / สารเคมีหรือสารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว';
+          let removeCount = 1;
+          for (let j = i13 + 1; j < safety.items.length; j++) {
+            if (String(safety.items[j]).trim().startsWith('-')) removeCount++;
+            else break;
+          }
+          safety.items.splice(i13, removeCount, combined13);
+        }
+      }
+
+      // 2) Remove section 10 completely.
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (String(sections[i].title || '').startsWith('10. Specific to work area')) {
+          sections.splice(i, 1);
+        }
+      }
+
+      // 3) Clear old answer mapping once, because q-number positions changed.
+      if (!sessionStorage.getItem('lpaStructureV2Applied')) {
+        if (typeof state !== 'undefined' && state) {
+          if (state.answers) Object.keys(state.answers).forEach(k => delete state.answers[k]);
+          if (state.comments) Object.keys(state.comments).forEach(k => delete state.comments[k]);
+          if (state.custom) Object.keys(state.custom).forEach(k => delete state.custom[k]);
+          if (state.images) Object.keys(state.images).forEach(k => delete state.images[k]);
+        }
+        sessionStorage.setItem('lpaStructureV2Applied', '1');
+      }
+
+      renderTable();
+      if (typeof updatePrintMeta === 'function') updatePrintMeta();
+      if (typeof updateEvaluation === 'function') updateEvaluation();
+
+      const msg = document.getElementById('savedMsg');
+      if (msg) msg.textContent = 'ปรับแบบฟอร์มแล้ว: ข้อ 1.3 = 1 คะแนน และตัดข้อ 10 ออก';
+    } catch (err) {
+      console.error('LPA structure update failed:', err);
+      if (tries > 200) clearInterval(timer);
+    }
+  }, 50);
+})();
