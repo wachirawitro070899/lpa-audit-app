@@ -33,11 +33,7 @@ window.LPA_FIREBASE_CONFIG = {
       .evaluation-rating .ev-current.ev-yellow{background:#fff600}
       .evaluation-rating .ev-current.ev-red{background:#ff1a0a}
       .evaluation-rating .ev-current.ev-empty{background:#f3f4f6;color:#6b7280}
-      @media(max-width:700px){
-        .evaluation-rating{overflow:auto}
-        .evaluation-rating table{min-width:760px;font-size:11px}
-        .evaluation-rating th,.evaluation-rating td{padding:7px 6px}
-      }
+      @media(max-width:700px){.evaluation-rating{overflow:auto}.evaluation-rating table{min-width:760px;font-size:11px}.evaluation-rating th,.evaluation-rating td{padding:7px 6px}}
       @media print{
         .evaluation-rating{margin-top:6px;border-radius:0;break-inside:avoid;page-break-inside:avoid}
         .evaluation-rating table{font-size:7px;min-width:0}
@@ -71,32 +67,20 @@ window.LPA_FIREBASE_CONFIG = {
     if (!box) return;
     const current = box.querySelector('.ev-current');
     const result = calculateEvaluation();
-
     current.className = 'ev-current';
     if (result.percent === null) {
       current.classList.add('ev-empty');
       current.innerHTML = '<span class="ev-current-emoji">—</span><span>Current Evaluation: ยังไม่มีผลการประเมิน</span>';
       return;
     }
-
     let emoji, rating, cls, action;
     if (result.percent >= 90) {
-      emoji = '😊';
-      rating = 'Acceptable';
-      cls = 'ev-green';
-      action = 'ผลอยู่ในเกณฑ์ยอมรับได้';
+      emoji = '😊'; rating = 'Acceptable'; cls = 'ev-green'; action = 'ผลอยู่ในเกณฑ์ยอมรับได้';
     } else if (result.percent >= 75) {
-      emoji = '😐';
-      rating = 'Acceptable with restrictions';
-      cls = 'ev-yellow';
-      action = 'ต้องดำเนินการแก้ไข และทำ LPA ใหม่เพื่อตรวจสอบการดำเนินการภายใน 24 ชั่วโมง';
+      emoji = '😐'; rating = 'Acceptable with restrictions'; cls = 'ev-yellow'; action = 'ต้องดำเนินการแก้ไข และทำ LPA ใหม่เพื่อตรวจสอบการดำเนินการภายใน 24 ชั่วโมง';
     } else {
-      emoji = '😒';
-      rating = 'Unacceptable';
-      cls = 'ev-red';
-      action = 'ต้องดำเนินการแก้ไข และกำหนด Internal Process Audit';
+      emoji = '😒'; rating = 'Unacceptable'; cls = 'ev-red'; action = 'ต้องดำเนินการแก้ไข และกำหนด Internal Process Audit';
     }
-
     current.classList.add(cls);
     current.innerHTML = `<span class="ev-current-emoji">${emoji}</span><span>Current Evaluation: ${result.percent.toFixed(1)}% — ${rating} | 😊 ${result.ok} &nbsp; 😐 ${result.observe} &nbsp; 😒 ${result.ng}<br>${action}</span>`;
   }
@@ -104,103 +88,30 @@ window.LPA_FIREBASE_CONFIG = {
   function installEvaluationRating() {
     const auditTable = document.querySelector('.audit-table');
     if (!auditTable || document.getElementById('lpaEvaluationRating')) return;
-
     addEvaluationStyles();
     const box = document.createElement('div');
     box.id = 'lpaEvaluationRating';
     box.className = 'evaluation-rating';
     box.innerHTML = `
       <table aria-label="LPA Evaluation Rating">
-        <thead>
-          <tr>
-            <th class="ev-head ev-range">Evaluation rating</th>
-            <th class="ev-head ev-emoji">Emoji</th>
-            <th class="ev-head">If issues found, corrective actions must be always implemented</th>
-            <th class="ev-head" style="width:12%">Total</th>
-          </tr>
-        </thead>
+        <thead><tr><th class="ev-head ev-range">Evaluation rating</th><th class="ev-head ev-emoji">Emoji</th><th class="ev-head">If issues found, corrective actions must be always implemented</th><th class="ev-head" style="width:12%">Total</th></tr></thead>
         <tbody>
-          <tr>
-            <td class="ev-range">≥ 90%</td>
-            <td class="ev-emoji ev-green">😊</td>
-            <td class="ev-desc ev-green">Acceptable — less than 4 “unsatisfactory”, or less than 7 “corrected”, or any equivalent combination.</td>
-            <td class="ev-green"><b>Acceptable</b></td>
-          </tr>
-          <tr>
-            <td class="ev-range">≥ 75% &amp; &lt; 90%</td>
-            <td class="ev-emoji ev-yellow">😐</td>
-            <td class="ev-desc ev-yellow">Acceptable with restrictions. New LPA should be performed to verify the actions implementation in maximum 24 hours. This new LPA should be considered as Unacceptable if it is rated again as Yellow.</td>
-            <td class="ev-yellow"><b>Restricted</b></td>
-          </tr>
-          <tr>
-            <td class="ev-range">&lt; 75%</td>
-            <td class="ev-emoji ev-red">😒</td>
-            <td class="ev-desc ev-red">Unacceptable — over 8 “unsatisfactory”, or equivalent combination. Internal process audit must be scheduled and performed.</td>
-            <td class="ev-red"><b>Unacceptable</b></td>
-          </tr>
+          <tr><td class="ev-range">≥ 90%</td><td class="ev-emoji ev-green">😊</td><td class="ev-desc ev-green">Acceptable — less than 4 “unsatisfactory”, or less than 7 “corrected”, or any equivalent combination.</td><td class="ev-green"><b>Acceptable</b></td></tr>
+          <tr><td class="ev-range">≥ 75% &amp; &lt; 90%</td><td class="ev-emoji ev-yellow">😐</td><td class="ev-desc ev-yellow">Acceptable with restrictions. New LPA should be performed to verify the actions implementation in maximum 24 hours. This new LPA should be considered as Unacceptable if it is rated again as Yellow.</td><td class="ev-yellow"><b>Restricted</b></td></tr>
+          <tr><td class="ev-range">&lt; 75%</td><td class="ev-emoji ev-red">😒</td><td class="ev-desc ev-red">Unacceptable — over 8 “unsatisfactory”, or equivalent combination. Internal process audit must be scheduled and performed.</td><td class="ev-red"><b>Unacceptable</b></td></tr>
         </tbody>
       </table>
       <div class="ev-current ev-empty"><span class="ev-current-emoji">—</span><span>Current Evaluation: ยังไม่มีผลการประเมิน</span></div>
     `;
-
     const tableWrap = auditTable.closest('.table-wrap');
     if (tableWrap) tableWrap.insertAdjacentElement('afterend', box);
     else auditTable.insertAdjacentElement('afterend', box);
-
     document.addEventListener('change', function (event) {
       if (event.target && event.target.matches('.audit-table input[type="radio"]')) updateEvaluation();
     });
-
     updateEvaluation();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installEvaluationRating);
-  } else {
-    installEvaluationRating();
-  }
-})();
-
-// Audit form structure adjustment:
-// - Remove section 10 "Specific to work area".
-// - Combine item 1.3 and its safety sub-items into one question / one score.
-(function () {
-  function applyAuditStructureAdjustment() {
-    if (typeof sections === 'undefined' || !Array.isArray(sections) || !sections.length) return;
-    if (window.__LPA_STRUCTURE_ADJUSTED__) return;
-    window.__LPA_STRUCTURE_ADJUSTED__ = true;
-
-    const safety = sections.find(sec => String(sec.title || '').startsWith('1. Health'));
-    if (safety && Array.isArray(safety.items)) {
-      const start = safety.items.findIndex(item => String(item).startsWith('1.3 '));
-      if (start >= 0) {
-        safety.items.splice(start, 5,
-          '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่ เช่น มีใบอนุญาตขับรถโฟร์กลิฟท์และเรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด / ใช้เส้นทางเดินตามที่บริษัทกำหนด / ทางออกและทางออกฉุกเฉินรวมถึงอุปกรณ์ป้องกันไฟไหม้ไม่มีสิ่งกีดขวาง / สารเคมีหรือสารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว'
-        );
-      }
-    }
-
-    const section10Index = sections.findIndex(sec => String(sec.title || '').startsWith('10. Specific to work area'));
-    if (section10Index >= 0) sections.splice(section10Index, 1);
-
-    // Old drafts used separate rows for 1.3 sub-items. Clear answer fields only when an old
-    // structure draft is detected, preventing old row scores from shifting to different questions.
-    const hasOldRows = ['q3','q4','q5','q6'].some(id => Object.prototype.hasOwnProperty.call(state.answers || {}, id));
-    if (hasOldRows) {
-      Object.keys(state.answers || {}).forEach(k => delete state.answers[k]);
-      Object.keys(state.comments || {}).forEach(k => delete state.comments[k]);
-      Object.keys(state.images || {}).forEach(k => delete state.images[k]);
-      const msg = document.getElementById('savedMsg');
-      if (msg) msg.textContent = 'แบบฟอร์มได้รับการปรับโครงสร้าง กรุณาเลือกผล Audit ใหม่';
-    }
-
-    if (typeof renderTable === 'function') renderTable();
-    if (typeof updatePrintMeta === 'function') updatePrintMeta();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyAuditStructureAdjustment);
-  } else {
-    setTimeout(applyAuditStructureAdjustment, 0);
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installEvaluationRating);
+  else installEvaluationRating();
 })();
