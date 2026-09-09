@@ -117,7 +117,6 @@ window.LPA_FIREBASE_CONFIG = {
 })();
 
 // Force the current audit structure after audit.html has finished declaring its variables.
-// This is intentionally retried because firebase-config.js is loaded in <head> before the audit script.
 (function () {
   let tries = 0;
   const timer = setInterval(function () {
@@ -127,15 +126,14 @@ window.LPA_FIREBASE_CONFIG = {
         if (tries > 200) clearInterval(timer);
         return;
       }
-
       clearInterval(timer);
 
-      // 1) Combine 1.3 and all of its sub-items into a single question / single score.
+      // Combine 1.3 and its bullet details into one question / one score.
       const safety = sections.find(sec => String(sec.title || '').startsWith('1. Health'));
       if (safety && Array.isArray(safety.items)) {
         const i13 = safety.items.findIndex(item => String(item).startsWith('1.3 '));
         if (i13 >= 0) {
-          const combined13 = '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่ เช่น มีใบอนุญาตขับรถโฟร์กลิฟท์และเรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด / มีการใช้เส้นทางเดินตามที่บริษัทกำหนด / ทางออกและทางออกฉุกเฉิน รวมถึงอุปกรณ์ป้องกันไฟไหม้ ไม่มีสิ่งกีดขวาง / สารเคมีหรือสารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว';
+          const combined13 = '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่\n- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด\n- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด\n- ทางออก / ทางออกฉุกเฉิน ง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)\n- สารเคมี / สารจำเพาะมีการบ่งชี้ และมีภาชนะรองรับสำหรับสารเคมีเหลว';
           let removeCount = 1;
           for (let j = i13 + 1; j < safety.items.length; j++) {
             if (String(safety.items[j]).trim().startsWith('-')) removeCount++;
@@ -145,14 +143,11 @@ window.LPA_FIREBASE_CONFIG = {
         }
       }
 
-      // 2) Remove section 10 completely.
+      // Remove section 10 completely.
       for (let i = sections.length - 1; i >= 0; i--) {
-        if (String(sections[i].title || '').startsWith('10. Specific to work area')) {
-          sections.splice(i, 1);
-        }
+        if (String(sections[i].title || '').startsWith('10. Specific to work area')) sections.splice(i, 1);
       }
 
-      // 3) Clear old answer mapping once, because q-number positions changed.
       if (!sessionStorage.getItem('lpaStructureV2Applied')) {
         if (typeof state !== 'undefined' && state) {
           if (state.answers) Object.keys(state.answers).forEach(k => delete state.answers[k]);
@@ -164,11 +159,12 @@ window.LPA_FIREBASE_CONFIG = {
       }
 
       renderTable();
+      // Preserve line breaks in question text so 1.3 displays as readable bullets.
+      document.querySelectorAll('.qtext').forEach(el => { el.style.whiteSpace = 'pre-line'; });
       if (typeof updatePrintMeta === 'function') updatePrintMeta();
       if (typeof updateEvaluation === 'function') updateEvaluation();
-
       const msg = document.getElementById('savedMsg');
-      if (msg) msg.textContent = 'ปรับแบบฟอร์มแล้ว: ข้อ 1.3 = 1 คะแนน และตัดข้อ 10 ออก';
+      if (msg) msg.textContent = 'ปรับแบบฟอร์มแล้ว: ข้อ 1.3 รวมเป็น 1 คะแนน และตัดข้อ 10 ออก';
     } catch (err) {
       console.error('LPA structure update failed:', err);
       if (tries > 200) clearInterval(timer);
