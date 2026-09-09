@@ -163,8 +163,6 @@ window.LPA_FIREBASE_CONFIG = {
       document.querySelectorAll('.qtext').forEach(el => { el.style.whiteSpace = 'pre-line'; });
       if (typeof updatePrintMeta === 'function') updatePrintMeta();
       if (typeof updateEvaluation === 'function') updateEvaluation();
-      const msg = document.getElementById('savedMsg');
-      if (msg) msg.textContent = 'ปรับแบบฟอร์มแล้ว: ข้อ 1.3 รวมเป็น 1 คะแนน และตัดข้อ 10 ออก';
     } catch (err) {
       console.error('LPA structure update failed:', err);
       if (tries > 200) clearInterval(timer);
