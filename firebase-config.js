@@ -160,3 +160,47 @@ window.LPA_FIREBASE_CONFIG = {
     installEvaluationRating();
   }
 })();
+
+// Audit form structure adjustment:
+// - Remove section 10 "Specific to work area".
+// - Combine item 1.3 and its safety sub-items into one question / one score.
+(function () {
+  function applyAuditStructureAdjustment() {
+    if (typeof sections === 'undefined' || !Array.isArray(sections) || !sections.length) return;
+    if (window.__LPA_STRUCTURE_ADJUSTED__) return;
+    window.__LPA_STRUCTURE_ADJUSTED__ = true;
+
+    const safety = sections.find(sec => String(sec.title || '').startsWith('1. Health'));
+    if (safety && Array.isArray(safety.items)) {
+      const start = safety.items.findIndex(item => String(item).startsWith('1.3 '));
+      if (start >= 0) {
+        safety.items.splice(start, 5,
+          '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่ เช่น มีใบอนุญาตขับรถโฟร์กลิฟท์และเรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด / ใช้เส้นทางเดินตามที่บริษัทกำหนด / ทางออกและทางออกฉุกเฉินรวมถึงอุปกรณ์ป้องกันไฟไหม้ไม่มีสิ่งกีดขวาง / สารเคมีหรือสารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว'
+        );
+      }
+    }
+
+    const section10Index = sections.findIndex(sec => String(sec.title || '').startsWith('10. Specific to work area'));
+    if (section10Index >= 0) sections.splice(section10Index, 1);
+
+    // Old drafts used separate rows for 1.3 sub-items. Clear answer fields only when an old
+    // structure draft is detected, preventing old row scores from shifting to different questions.
+    const hasOldRows = ['q3','q4','q5','q6'].some(id => Object.prototype.hasOwnProperty.call(state.answers || {}, id));
+    if (hasOldRows) {
+      Object.keys(state.answers || {}).forEach(k => delete state.answers[k]);
+      Object.keys(state.comments || {}).forEach(k => delete state.comments[k]);
+      Object.keys(state.images || {}).forEach(k => delete state.images[k]);
+      const msg = document.getElementById('savedMsg');
+      if (msg) msg.textContent = 'แบบฟอร์มได้รับการปรับโครงสร้าง กรุณาเลือกผล Audit ใหม่';
+    }
+
+    if (typeof renderTable === 'function') renderTable();
+    if (typeof updatePrintMeta === 'function') updatePrintMeta();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAuditStructureAdjustment);
+  } else {
+    setTimeout(applyAuditStructureAdjustment, 0);
+  }
+})();
