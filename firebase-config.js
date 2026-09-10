@@ -28,6 +28,7 @@ window.LPA_FIREBASE_CONFIG = {
       .evaluation-rating .ev-current.ev-green{background:#8df34d}.evaluation-rating .ev-current.ev-yellow{background:#fff600}.evaluation-rating .ev-current.ev-red{background:#ff1a0a}.evaluation-rating .ev-current.ev-empty{background:#f3f4f6;color:#6b7280}
       .lpa-required-note{margin-top:8px;padding:8px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;font-weight:600}
       .lpa-invalid{border:2px solid #dc2626!important;background:#fff1f2!important}
+      #auditee[readonly]{background:#f3f4f6;color:#374151;font-weight:700;cursor:not-allowed}
       @media(max-width:700px){.evaluation-rating{overflow:auto}.evaluation-rating table{min-width:760px;font-size:11px}}
       @media print{.evaluation-rating{margin-top:6px;border-radius:0;break-inside:avoid}.evaluation-rating table{font-size:7px;min-width:0}.evaluation-rating th,.evaluation-rating td{padding:3px 4px}.lpa-required-note{display:none!important}}
     `;
@@ -96,4 +97,36 @@ window.LPA_FIREBASE_CONFIG = {
     },true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installValidation);else installValidation();
+})();
+
+// Lock Auditee automatically from selected Line / Area.
+(function(){
+  const auditeeByArea={
+    1:'Pratoomchai',
+    2:'Somkid',
+    4:'Pratoomchai',
+    5:'Somkid',
+    6:'Narin',
+    7:'Natthawat',
+    8:'Pratoomchai',
+    9:'Watcharee',
+    10:'Teeraporn',
+    11:'Ongard',
+    12:'Wuttipat'
+  };
+  function areaNumber(value){const m=String(value||'').match(/^Area\s+(\d+)\b/i);return m?Number(m[1]):null;}
+  function syncAuditee(){
+    const line=document.getElementById('line'),auditee=document.getElementById('auditee');if(!line||!auditee)return;
+    const name=auditeeByArea[areaNumber(line.value)]||'';
+    auditee.value=name;
+    auditee.readOnly=!!name;
+    auditee.title=name?'Auditee ถูกกำหนดอัตโนมัติตาม Area':'ยังไม่ได้กำหนด Auditee สำหรับ Area นี้';
+    auditee.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function installAuditeeLock(){
+    const line=document.getElementById('line'),auditee=document.getElementById('auditee');if(!line||!auditee)return;
+    line.addEventListener('change',syncAuditee);
+    setTimeout(syncAuditee,100);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installAuditeeLock);else installAuditeeLock();
 })();
