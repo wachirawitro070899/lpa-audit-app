@@ -20,19 +20,13 @@ window.LPA_FIREBASE_CONFIG = {
       .evaluation-rating table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
       .evaluation-rating th,.evaluation-rating td{border:1px solid #8b6b6b;padding:8px 10px;text-align:center;vertical-align:middle}
       .evaluation-rating .ev-head{background:#e8b8b4;font-weight:700;color:#111}
-      .evaluation-rating .ev-range{width:17%;font-weight:700;background:#f7e8e8}
-      .evaluation-rating .ev-emoji{width:9%;font-size:24px;font-weight:700}
-      .evaluation-rating .ev-desc{text-align:left;line-height:1.45;font-weight:600}
+      .evaluation-rating .ev-range{width:17%;font-weight:700;background:#f7e8e8}.evaluation-rating .ev-emoji{width:9%;font-size:24px;font-weight:700}.evaluation-rating .ev-desc{text-align:left;line-height:1.45;font-weight:600}
       .evaluation-rating .ev-green{background:#8df34d}.evaluation-rating .ev-yellow{background:#fff600}.evaluation-rating .ev-red{background:#ff1a0a;color:#000}
-      .evaluation-rating .ev-current{padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;border-top:1px solid #8b6b6b}
-      .evaluation-rating .ev-current.ev-green{background:#8df34d}.evaluation-rating .ev-current.ev-yellow{background:#fff600}.evaluation-rating .ev-current.ev-red{background:#ff1a0a}.evaluation-rating .ev-current.ev-empty{background:#f3f4f6;color:#6b7280}
-      .lpa-required-note{margin-top:8px;padding:8px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;font-weight:600}
-      .lpa-invalid{border:2px solid #dc2626!important;background:#fff1f2!important}
-      #auditee[readonly],#auditDate[readonly]{background:#f3f4f6;color:#374151;font-weight:700;cursor:not-allowed}
-      @media(max-width:700px){.evaluation-rating{overflow:auto}.evaluation-rating table{min-width:760px;font-size:11px}}
-      @media print{.evaluation-rating{margin-top:6px;border-radius:0;break-inside:avoid}.evaluation-rating table{font-size:7px;min-width:0}.evaluation-rating th,.evaluation-rating td{padding:3px 4px}.lpa-required-note{display:none!important}}
-    `;
-    document.head.appendChild(style);
+      .evaluation-rating .ev-current{padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;border-top:1px solid #8b6b6b}.evaluation-rating .ev-current.ev-green{background:#8df34d}.evaluation-rating .ev-current.ev-yellow{background:#fff600}.evaluation-rating .ev-current.ev-red{background:#ff1a0a}.evaluation-rating .ev-current.ev-empty{background:#f3f4f6;color:#6b7280}
+      .lpa-required-note{margin-top:8px;padding:8px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;font-weight:600}.lpa-invalid{border:2px solid #dc2626!important;background:#fff1f2!important}
+      #auditee[readonly]{background:#f3f4f6;color:#374151;font-weight:700;cursor:not-allowed}#auditDate{font-weight:700;cursor:pointer}
+      @media(max-width:700px){.evaluation-rating{overflow:auto}.evaluation-rating table{min-width:760px;font-size:11px}}@media print{.evaluation-rating{margin-top:6px;border-radius:0;break-inside:avoid}.evaluation-rating table{font-size:7px;min-width:0}.evaluation-rating th,.evaluation-rating td{padding:3px 4px}.lpa-required-note{display:none!important}}
+    `;document.head.appendChild(style);
   }
   function calculateEvaluation(){const checked=Array.from(document.querySelectorAll('.audit-table input[type="radio"]:checked'));let ok=0,observe=0,ng=0;checked.forEach(input=>{if(input.value==='ok')ok++;else if(input.value==='observe')observe++;else if(input.value==='ng')ng++;});const scored=ok+observe+ng;const percent=scored?Math.round(((ok*2+observe)/(scored*2))*1000)/10:null;return{ok,observe,ng,scored,percent};}
   function updateEvaluation(){const box=document.getElementById('lpaEvaluationRating');if(!box)return;const current=box.querySelector('.ev-current'),r=calculateEvaluation();current.className='ev-current';if(r.percent===null){current.classList.add('ev-empty');current.innerHTML='<span>Current Evaluation: ยังไม่มีผลการประเมิน</span>';return;}let emoji,rating,cls,action;if(r.percent>=90){emoji='😊';rating='Acceptable';cls='ev-green';action='ผลอยู่ในเกณฑ์ยอมรับได้';}else if(r.percent>=75){emoji='😐';rating='Acceptable with restrictions';cls='ev-yellow';action='ต้องดำเนินการแก้ไข และทำ LPA ใหม่ภายใน 24 ชั่วโมง';}else{emoji='😒';rating='Unacceptable';cls='ev-red';action='ต้องดำเนินการแก้ไข กำหนด Internal Process Audit และแนบรูปหลักฐาน';}current.classList.add(cls);current.innerHTML=`<span style="font-size:26px">${emoji}</span><span>Current Evaluation: ${r.percent.toFixed(1)}% — ${rating} | 😊 ${r.ok} &nbsp; 😐 ${r.observe} &nbsp; 😒 ${r.ng}<br>${action}</span>`;}
@@ -40,7 +34,7 @@ window.LPA_FIREBASE_CONFIG = {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installEvaluationRating);else installEvaluationRating();
 })();
 
-// Force the current audit structure after audit.html has declared its variables.
+// Force current audit structure.
 (function(){let tries=0;const timer=setInterval(function(){tries++;try{if(typeof sections==='undefined'||typeof renderTable!=='function'){if(tries>200)clearInterval(timer);return;}clearInterval(timer);const safety=sections.find(sec=>String(sec.title||'').startsWith('1. Health'));if(safety&&Array.isArray(safety.items)){const i13=safety.items.findIndex(item=>String(item).startsWith('1.3 '));if(i13>=0){const combined13='1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่\n- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด\n- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด\n- ทางออก / ทางออกฉุกเฉิน ง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)\n- สารเคมี / สารจำเพาะมีการบ่งชี้ และมีภาชนะรองรับสำหรับสารเคมีเหลว';let removeCount=1;for(let j=i13+1;j<safety.items.length;j++){if(String(safety.items[j]).trim().startsWith('-'))removeCount++;else break;}safety.items.splice(i13,removeCount,combined13);}}for(let i=sections.length-1;i>=0;i--){if(String(sections[i].title||'').startsWith('10. Specific to work area'))sections.splice(i,1);}if(!sessionStorage.getItem('lpaStructureV2Applied')){if(typeof state!=='undefined'&&state){if(state.answers)Object.keys(state.answers).forEach(k=>delete state.answers[k]);if(state.comments)Object.keys(state.comments).forEach(k=>delete state.comments[k]);if(state.custom)Object.keys(state.custom).forEach(k=>delete state.custom[k]);if(state.images)Object.keys(state.images).forEach(k=>delete state.images[k]);}sessionStorage.setItem('lpaStructureV2Applied','1');}renderTable();document.querySelectorAll('.qtext').forEach(el=>{el.style.whiteSpace='pre-line';});if(typeof updatePrintMeta==='function')updatePrintMeta();}catch(err){console.error('LPA structure update failed:',err);if(tries>200)clearInterval(timer);}},50);})();
 
 // Submission validation.
@@ -49,21 +43,20 @@ window.LPA_FIREBASE_CONFIG = {
 // Lock Auditee automatically from selected Line / Area.
 (function(){const auditeeByArea={1:'Pratoomchai',2:'Somkid',4:'Pratoomchai',5:'Somkid',6:'Narin',7:'Natthawat',8:'Pratoomchai',9:'Watcharee',10:'Teeraporn',11:'Ongard',12:'Wuttipat'};function areaNumber(value){const m=String(value||'').match(/^Area\s+(\d+)\b/i);return m?Number(m[1]):null;}function syncAuditee(){const line=document.getElementById('line'),auditee=document.getElementById('auditee');if(!line||!auditee)return;const name=auditeeByArea[areaNumber(line.value)]||'';auditee.value=name;auditee.readOnly=!!name;auditee.title=name?'Auditee ถูกกำหนดอัตโนมัติตาม Area':'ยังไม่ได้กำหนด Auditee สำหรับ Area นี้';auditee.dispatchEvent(new Event('change',{bubbles:true}));}function installAuditeeLock(){const line=document.getElementById('line'),auditee=document.getElementById('auditee');if(!line||!auditee)return;line.addEventListener('change',syncAuditee);setTimeout(syncAuditee,100);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installAuditeeLock);else installAuditeeLock();})();
 
-// Show Audit Date on the entry form and set it automatically to today's local date.
+// Calendar date input: calendar UI remains available, but only today's date can be selected.
 (function(){
   function installVisibleAuditDate(){
-    const date=document.getElementById('auditDate');
-    const filters=document.querySelector('.filters');
+    const date=document.getElementById('auditDate'),filters=document.querySelector('.filters');
     if(!date||!filters||date.dataset.visibleDateInstalled)return;
     date.dataset.visibleDateInstalled='1';
     date.type='date';
-    date.readOnly=true;
-    if(typeof todayLocal==='function')date.value=todayLocal();
+    const today=typeof todayLocal==='function'?todayLocal():(()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10);})();
+    date.value=today;date.min=today;date.max=today;date.readOnly=false;
     const field=document.createElement('div');field.className='field';field.id='auditDateField';field.innerHTML='<label>Date / วันที่ Audit</label>';
-    date.parentNode.insertBefore(field,date);
-    field.appendChild(date);
-    filters.insertBefore(field,filters.firstChild);
-    date.dispatchEvent(new Event('change',{bubbles:true}));
+    date.parentNode.insertBefore(field,date);field.appendChild(date);filters.insertBefore(field,filters.firstChild);
+    function enforceToday(){if(date.value!==today)date.value=today;}
+    date.addEventListener('input',enforceToday);date.addEventListener('change',function(){enforceToday();date.dispatchEvent(new Event('blur'));});
+    date.dispatchEvent(new Event('change',{bubbles:false}));
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installVisibleAuditDate);else installVisibleAuditDate();
 })();
