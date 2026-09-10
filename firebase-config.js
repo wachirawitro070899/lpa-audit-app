@@ -34,22 +34,21 @@ window.LPA_FIREBASE_CONFIG = {
 
 // Workstation and Production are separate locked fields. Area 5, 6 and 8 use fixed assigned values; other Areas keep the previous automatic Line value.
 (function(){
-  const fixedByArea={
-    5:'U375 / Thinbride / APB-Mi Op10',
-    6:'T6 / PBR / P2-30A / APB-Mi Op20',
-    8:'U375 / P2-30A / Thin bride / APB-Mi'
-  };
+  const fixedByArea={5:'U375 / Thinbride / APB-Mi Op10',6:'T6 / PBR / P2-30A / APB-Mi Op20',8:'U375 / P2-30A / Thin bride / APB-Mi'};
   function areaNumber(value){const m=String(value||'').match(/^Area\s+(\d+)\b/i);return m?Number(m[1]):null;}
   function cleanLineValue(value){return String(value||'').replace(/^Area\s+\d+\s*/i,'').trim();}
-  function install(){
-    const line=document.getElementById('line'),filters=document.querySelector('.filters');if(!line||!filters)return;
-    document.getElementById('workstationProductionField')?.remove();document.getElementById('workstationField')?.remove();document.getElementById('productionField')?.remove();
-    const wf=document.createElement('div');wf.className='field';wf.id='workstationField';wf.innerHTML='<label>Workstation</label><input id="workstation" type="text" readonly>';
-    const pf=document.createElement('div');pf.className='field';pf.id='productionField';pf.innerHTML='<label>Production</label><input id="production" type="text" readonly>';
-    const lf=line.closest('.field');if(lf){lf.insertAdjacentElement('afterend',pf);lf.insertAdjacentElement('afterend',wf);}else{filters.appendChild(wf);filters.appendChild(pf);}
-    const workstation=document.getElementById('workstation'),production=document.getElementById('production');
-    function sync(){const area=areaNumber(line.value);const value=fixedByArea[area]||cleanLineValue(line.value);workstation.value=value;production.value=value;workstation.placeholder='เลือก Line ก่อน';production.placeholder='เลือก Line ก่อน';}
-    line.addEventListener('change',sync);sync();
-  }
+  function install(){const line=document.getElementById('line'),filters=document.querySelector('.filters');if(!line||!filters)return;document.getElementById('workstationProductionField')?.remove();document.getElementById('workstationField')?.remove();document.getElementById('productionField')?.remove();const wf=document.createElement('div');wf.className='field';wf.id='workstationField';wf.innerHTML='<label>Workstation</label><input id="workstation" type="text" readonly>';const pf=document.createElement('div');pf.className='field';pf.id='productionField';pf.innerHTML='<label>Production</label><input id="production" type="text" readonly>';const lf=line.closest('.field');if(lf){lf.insertAdjacentElement('afterend',pf);lf.insertAdjacentElement('afterend',wf);}else{filters.appendChild(wf);filters.appendChild(pf);}const workstation=document.getElementById('workstation'),production=document.getElementById('production');function sync(){const area=areaNumber(line.value);const value=fixedByArea[area]||cleanLineValue(line.value);workstation.value=value;production.value=value;workstation.placeholder='เลือก Line ก่อน';production.placeholder='เลือก Line ก่อน';}line.addEventListener('change',sync);sync();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+
+// Main procedure title on the audit data-entry page. White background only.
+(function(){
+  function installProcedureTitle(){
+    if(document.getElementById('procedureMainTitle'))return;
+    const main=document.querySelector('main.page');if(!main)return;
+    const title=document.createElement('div');title.id='procedureMainTitle';title.style.cssText='background:#fff;color:#111;text-align:center;padding:14px 16px 12px;margin:0 0 16px;border:1px solid #ead6d6;border-radius:10px;line-height:1.35';
+    title.innerHTML='<div style="font-size:20px;font-weight:800;letter-spacing:.2px">SUPPLEMENT TO PROCEDURE DESCRIPTION - CBI QM-17 s1</div><div style="font-size:16px;font-weight:600;margin-top:3px">Layered Process Audit Checklist - Manufacturing</div>';
+    main.insertBefore(title,main.firstChild);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installProcedureTitle);else installProcedureTitle();
 })();
