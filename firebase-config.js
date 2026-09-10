@@ -24,7 +24,7 @@ window.LPA_FIREBASE_CONFIG = {
       .evaluation-rating .ev-green{background:#8df34d}.evaluation-rating .ev-yellow{background:#fff600}.evaluation-rating .ev-red{background:#ff1a0a;color:#000}
       .evaluation-rating .ev-current{padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;border-top:1px solid #8b6b6b}.evaluation-rating .ev-current.ev-green{background:#8df34d}.evaluation-rating .ev-current.ev-yellow{background:#fff600}.evaluation-rating .ev-current.ev-red{background:#ff1a0a}.evaluation-rating .ev-current.ev-empty{background:#f3f4f6;color:#6b7280}
       .lpa-required-note{margin-top:8px;padding:8px 10px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;font-weight:600}.lpa-invalid{border:2px solid #dc2626!important;background:#fff1f2!important}
-      #auditee[readonly]{background:#f3f4f6;color:#374151;font-weight:700;cursor:not-allowed}#auditDate{font-weight:700;cursor:pointer}
+      #auditee[readonly],#workstationProduction[readonly]{background:#f3f4f6;color:#374151;font-weight:700;cursor:not-allowed}#auditDate{font-weight:700;cursor:pointer}
       @media(max-width:700px){.evaluation-rating{overflow:auto}.evaluation-rating table{min-width:760px;font-size:11px}}@media print{.evaluation-rating{margin-top:6px;border-radius:0;break-inside:avoid}.evaluation-rating table{font-size:7px;min-width:0}.evaluation-rating th,.evaluation-rating td{padding:3px 4px}.lpa-required-note{display:none!important}}
     `;document.head.appendChild(style);
   }
@@ -48,15 +48,28 @@ window.LPA_FIREBASE_CONFIG = {
   function installVisibleAuditDate(){
     const date=document.getElementById('auditDate'),filters=document.querySelector('.filters');
     if(!date||!filters||date.dataset.visibleDateInstalled)return;
-    date.dataset.visibleDateInstalled='1';
-    date.type='date';
+    date.dataset.visibleDateInstalled='1';date.type='date';
     const today=typeof todayLocal==='function'?todayLocal():(()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10);})();
     date.value=today;date.min=today;date.max=today;date.readOnly=false;
     const field=document.createElement('div');field.className='field';field.id='auditDateField';field.innerHTML='<label>Date / วันที่ Audit</label>';
     date.parentNode.insertBefore(field,date);field.appendChild(date);filters.insertBefore(field,filters.firstChild);
     function enforceToday(){if(date.value!==today)date.value=today;}
-    date.addEventListener('input',enforceToday);date.addEventListener('change',function(){enforceToday();date.dispatchEvent(new Event('blur'));});
-    date.dispatchEvent(new Event('change',{bubbles:false}));
+    date.addEventListener('input',enforceToday);date.addEventListener('change',function(){enforceToday();date.dispatchEvent(new Event('blur'));});date.dispatchEvent(new Event('change',{bubbles:false}));
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installVisibleAuditDate);else installVisibleAuditDate();
+})();
+
+// Add Workstation Production after Line / Area and sync it automatically with the selected Line.
+(function(){
+  function installWorkstationProduction(){
+    const line=document.getElementById('line'),filters=document.querySelector('.filters');
+    if(!line||!filters||document.getElementById('workstationProduction'))return;
+    const field=document.createElement('div');field.className='field';field.id='workstationProductionField';
+    field.innerHTML='<label>Workstation Production</label><input id="workstationProduction" type="text" readonly placeholder="เลือก Line / Area ก่อน">';
+    const lineField=line.closest('.field');if(lineField&&lineField.nextSibling)filters.insertBefore(field,lineField.nextSibling);else filters.appendChild(field);
+    const ws=document.getElementById('workstationProduction');
+    function syncWorkstation(){ws.value=line.value||'';ws.title=line.value?'ดึงข้อมูลอัตโนมัติจาก Line / Area':'';}
+    line.addEventListener('change',syncWorkstation);syncWorkstation();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installWorkstationProduction);else installWorkstationProduction();
 })();
