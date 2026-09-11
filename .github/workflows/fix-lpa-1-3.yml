@@ -1,48 +1,49 @@
-name: Fix LPA 1.3 grouping
+name: Fix LPA item 1.3
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - '.github/workflows/fix-lpa-1-3.yml'
+      - .github/workflows/fix-lpa-1-3.yml
 
 permissions:
   contents: write
 
 jobs:
-  fix:
+  update-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Group LPA 1.3 into one audit item
-        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Combine item 1.3 into one question
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
-          p = Path('audit.html')
-          s = p.read_text(encoding='utf-8')
+          p = Path("audit.html")
+          s = p.read_text(encoding="utf-8")
           old = """  '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่',
   '- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด',
   '- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด',
   '- ทางออก / ทางออกฉุกเฉินง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)',
   '- สารเคมี/สารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว',"""
-          new = """  '1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่\\n- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด\\n- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด\\n- ทางออก / ทางออกฉุกเฉินง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)\\n- สารเคมี/สารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว',"""
+          new = """  `1.3 มีการปฏิบัติตามกฎด้านความปลอดภัยหรือไม่
+- มีใบอนุญาตขับรถโฟร์กลิฟท์, เรียงกล่องสูงไม่เกินมาตรฐานที่กำหนด
+- มีการใช้เส้นทางเดินตามที่บริษัทกำหนด
+- ทางออก / ทางออกฉุกเฉินง่ายต่อการเข้าถึงอุปกรณ์ป้องกันไฟไหม้ (ไม่มีสิ่งกีดขวาง)
+- สารเคมี/สารจำเพาะมีการบ่งชี้ความปลอดภัยและมีภาชนะรองรับสำหรับสารเคมีเหลว`,"""
           if old not in s:
-              raise SystemExit('Target 1.3 block not found')
+              raise SystemExit("1.3 source block not found")
           s = s.replace(old, new, 1)
-          old_render = "`<div class=\"qtext ${sub?'subitem':''}\">${esc(q)}</div>`"
-          new_render = "`<div class=\"qtext ${sub?'subitem':''}\">${esc(q).replace(/\\n/g,'<br>')}</div>`"
-          if old_render not in s:
-              raise SystemExit('Question renderer not found')
-          s = s.replace(old_render, new_render, 1)
-          p.write_text(s, encoding='utf-8')
+          s = s.replace('.qtext{line-height:1.55;min-height:34px;white-space:normal;', '.qtext{line-height:1.55;min-height:34px;white-space:pre-line;', 1)
+          p.write_text(s, encoding="utf-8")
           PY
-      - name: Commit fix
-        shell: bash
+
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add audit.html
-          git diff --cached --quiet && exit 0
-          git commit -m "Fix LPA item 1.3 as one grouped question"
+          git commit -m "Combine LPA item 1.3 into one question"
           git push
